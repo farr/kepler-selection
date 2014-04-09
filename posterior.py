@@ -1,60 +1,87 @@
+import bz2
+import glob
 import numpy as np
+import os.path as op
+import scipy.integrate as si
 import scipy.special as ss
+import scipy.stats as st
+import warnings
 
-def integrate_fixed(f, xmin, xmax, ymin, ymax, N):
-    """Integrate the function ``f`` over a two-dimensional box with ``N``
-    subdivisions along each axis.
-
-    """
-    xs = np.linspace(xmin, xmax, N+1)
-    ys = np.linspace(ymin, ymax, N+1)
-
-    dx = xs[1] - xs[0]
-    dy = ys[1] - ys[0]
-
-    XS, YS = np.meshgrid(xs, ys)
-    pts = np.column_stack((XS.flatten(), YS.flatten()))
-
-    fs = f(pts).reshape((N+1, N+1))
-
-    return 0.25*dx*dy*np.sum(fs[:-1, :-1] + fs[:-1, 1:] + fs[1:, :-1] + fs[1:, 1:])
+class TooManyPointsError(Exception):
+    def __init__(self, *args, **kwargs):
+        super(TooManyPointsError, self).__init__(*args, **kwargs)
 
 def integrate(f, xmin, xmax, ymin, ymax, epsrel):
-    """Integrate ``f`` over a two-dimensional box with estimated relative
-    error ``epsrel``.  ``f`` should take array arguments of the shape
-    ``(Npts, 2)``.
+    """Integrate :math:`f(x,y)` over the rectangular domain
+    :math:`(x_\mathrm{min}, y_\mathrm{min}) < (x,y) < (x_\mathrm{max},
+    y_\mathrm{max})`, to an (estimated) relative accuracy of
+    ``epsrel``.
 
+    :param f: Function of two arguments.  Must be able to take an
+      array of shape ``(N, 2)`` and return an array of shape ``(N,)``.
+
+    :param xmin: Lower limit in first argument.
+
+    :param xmax: Upper limit in first argument.
+
+    :param ymin: Lower limit in second argument.
+
+    :param ymax: Upper limit in second argument.
+
+    :param epsrel: Relative error tolerance.
     """
-    N = 1
-    flow = integrate_fixed(f, xmin, xmax, ymin, ymax, N)
 
-    N = 2
-    fhigh = integrate_fixed(f, xmin, xmax, ymin, ymax, N)
+    xs = np.linspace(xmin, xmax, 3)
+    ys = np.linspace(ymin, ymax, 3)
+    k = 1
 
-    fbest = 4.0/3.0*fhigh - 1.0/3.0*flow
+    XS,YS = np.meshgrid(xs, ys, indexing='ij')
+    FS = f(np.column_stack((XS.flatten(), YS.flatten()))).reshape(XS.shape)
 
-    rel_err = 2.0*np.abs(fbest - fhigh)/(np.abs(fbest) + np.abs(fhigh))
+    I = si.romb(si.romb(FS, axis=1, dx=ys[1]-ys[0]), axis=0, dx=xs[1]-xs[0])
 
-    while rel_err >= epsrel:
-        N *= 2
+    while True:
+        FS_old = FS
+        I_old = I
 
-        flow = fhigh
-        fbest_old = fbest
-        
-        fhigh = integrate_fixed(f, xmin, xmax, ymin, ymax, N)
-        fbest = 4.0/3.0*fhigh - 1.0/3.0*flow
+        k = k+1
+        N = (1<<k) + 1
 
-        rel_err = 2.0*np.abs(fbest-fbest_old)/(np.abs(fbest) + np.abs(fbest_old))
+        if k > 13:
+            # More than 8193 points in each dimension
+            raise TooManyPointsError('more than 2^{0:d} points in each dimension'.format(k))
 
-    return fbest
+        xs = np.linspace(xmin, xmax, N)
+        ys = np.linspace(ymin, ymax, N)
+
+        XS, YS = np.meshgrid(xs, ys, indexing='ij')
+        FS = f(np.column_stack((XS.flatten(), YS.flatten()))).reshape(XS.shape)
+
+        I = si.romb(si.romb(FS, axis=1, dx=ys[1]-ys[0]), axis=0, dx=xs[1]-xs[0])
+
+        err = 2.0*np.abs(I-I_old)/(np.abs(I) + np.abs(I_old))
+
+        if not (err > epsrel):
+            break
+
+    return I
+
+def load_kepler_data(file):
+    with bz2.BZ2File(file, 'r') as inp:
+        header = inp.readline().split('|')
+        inp.readline()
+        cols = (header.index('Period'), header.index('Planet Radius'), header.index('Kepler Disposition'))
+        data = np.genfromtxt(inp, usecols=cols, delimiter='|', dtype=np.dtype([('P', np.float), ('R', np.float), ('disp', np.str, 100)]))
+
+    data = data[(~np.isnan(data['R'])) & (~np.isnan(data['P'])) & (data['disp'] == 'CANDIDATE')]
+
+    return data
 
 class Posterior(object):
-    def __init__(self, pts):
-        self._pts = pts
-
-    @property
-    def pts(self):
-        return self._pts
+    def __init__(self, p, r):
+        self.p = p
+        self.r = r
+        self.pts = np.log(np.column_stack((p, r)))
 
     @property
     def dtype(self):
@@ -62,32 +89,37 @@ class Posterior(object):
                          ('mu', np.float, 2),
                          ('sigma', np.float, 2),
                          ('theta', np.float),
-                         ('p0', np.float),
-                         ('mu_rho', np.float),
-                         ('sigma_rho', np.float),
+                         ('mu_snr', np.float),
+                         ('sigma_snr', np.float),
                          ('lower_left', np.float, 2),
                          ('upper_right', np.float, 2),
                          ('gamma', np.float, 2)])
 
     @property
     def pnames(self):
-        return [r'$A$', r'$\mu_P$', r'$\mu_R$', r'$\sigma_1$', r'$\sigma_2$',
-                r'$\theta$', r'$p_0$', r'$\mu_\rho$', r'$\sigma_\rho$',
-                r'$\ln P_\mathrm{min}$', r'$\ln R_\mathrm{min}$',
-                r'$\ln P_\mathrm{max}$', r'$\ln R_\mathrm{max}$',
-                r'$\gamma_0$', r'$\gamma_1$']
+        return [r'A',
+                r'$\mu_P$', r'$\mu_R$',
+                r'$\sigma_1$', r'$\sigma_2$',
+                r'$\theta$',
+                r'$\mu_\rho$', r'$\sigma_\rho$',
+                r'$P_\mathrm{min}$', r'$R_\mathrm{min}$',
+                r'$P_\mathrm{max}$', r'$R_\mathrm{max}$', r'$\gamma_P$',
+                r'$\gamma_R$']
 
     @property
     def nparams(self):
-        return 15
+        return 14
 
     def to_params(self, p):
-        return np.atleast_1d(p).view(self.dtype).squeeze()
+        return p.view(self.dtype).squeeze()
 
-    def covariance_matrix(self, p):
+    def covariance_matrix(self, p, inv=False):
         p = self.to_params(p)
 
-        d = np.diag(p['sigma']*p['sigma'])
+        if inv:
+            d = np.diag(1.0/(p['sigma']*p['sigma']))
+        else:
+            d = np.diag(p['sigma']*p['sigma'])
 
         ct = np.cos(p['theta'])
         st = np.sin(p['theta'])
@@ -96,35 +128,34 @@ class Posterior(object):
 
         return np.dot(r, np.dot(d, r.T))
 
-    def inverse_covarance_matrix(self, p):
+    def geometric_pselect(self, pts):
+        return 0.08256960301*np.exp(-2.0/3.0*pts[:,0])
+
+    def snr_pselect(self, p, pts):
         p = self.to_params(p)
-
-        d = np.diag(1.0 / (p['sigma']*p['sigma']))
-
-        ct = np.cos(p['theta'])
-        st = np.sin(p['theta'])
-
-        r = np.array([[ct, -st], [st, ct]])
-
-        return np.dot(r, np.dot(d, r.T))
-
-    def geometric_probs(self, p, pts):
-        p = self.to_params(p)
-
-        return p['p0']/np.exp(2.0/3.0*pts[:,0])
-
-    def snr_selection_probs(self, p, pts):
-        p = self.to_params(p)
+        pts = np.atleast_2d(pts)
+        
         log_snr = 2.0*pts[:,1] - 1.0/3.0*pts[:,0]
 
-        return 0.5*(1.0 + ss.erf((log_snr - p['mu_rho'])/p['sigma_rho']))
+        return 1.0/(1.0 + np.exp(-(log_snr - p['mu_snr'])/p['sigma_snr']))
 
     def pselect(self, p, pts):
-        return self.geometric_probs(p, pts)*self.snr_selection_probs(p, pts)
-        
-    def background_density(self, p, pts):
+        return self.geometric_pselect(pts)*self.snr_pselect(p, pts)
+
+    def foreground_density(self, p, pts):
         p = self.to_params(p)
 
+        cm = self.covariance_matrix(p, inv=True)
+
+        xs = pts - p['mu']
+
+        return 1.0/(2.0*np.pi*np.prod(p['sigma']))*np.exp(-0.5*np.sum(xs*np.dot(cm, xs.T).T, axis=1))
+
+    def background_density(self, p, pts=None):
+        p = self.to_params(p)
+        if pts is None:
+            pts = self.pts
+            
         center = 0.5*(p['lower_left'] + p['upper_right'])
         dx = p['upper_right'] - p['lower_left']
         V = np.prod(dx)
@@ -137,137 +168,93 @@ class Posterior(object):
         rhos[sel] = 0.0
         return rhos
 
-    def true_foreground_density(self, p, pts):
-        p = self.to_params(p)
+    def selected_density(self, p, pts):
+        return self.pselect(p, pts)*self.foreground_density(p, pts)/self.alpha(p)
 
-        cm = self.inverse_covarance_matrix(p)
-
-        xs = pts - p['mu']
-
-        return 1.0/(2.0*np.pi*np.prod(p['sigma']))*np.exp(-0.5*np.sum(xs*np.linalg.solve(cm, xs.T).T, axis=1))
-
-    def unnormed_foreground_density(self, p, pts):
-        return self.pselect(p, pts)*self.true_foreground_density(p, pts)
-
-    def foreground_density_norm(self, p):
+    def alpha(self, p):
         p = self.to_params(p)
 
         cm = self.covariance_matrix(p)
 
-        xmin = min(p['mu'][0] - 5.0*cm[0,0], np.min(self.pts[:,0]))
-        xmax = max(p['mu'][0] + 5.0*cm[0,0], np.max(self.pts[:,0]))
-        ymin = min(p['mu'][1] - 5.0*cm[1,1], np.min(self.pts[:,1]))
-        ymax = max(p['mu'][1] + 5.0*cm[1,1], np.max(self.pts[:,1]))
+        xmin = p['mu'][0] - 10.0*cm[0,0]
+        xmax = p['mu'][0] + 10.0*cm[0,0]
+        ymin = p['mu'][1] - 10.0*cm[1,1]
+        ymax = p['mu'][1] + 10.0*cm[1,1]
 
-        return 1.0/integrate((lambda pts: self.unnormed_foreground_density(p, pts)), xmin, xmax, ymin, ymax, 1e-8)
+        xmin = min(xmin, np.min(self.pts[:,0]))
+        xmax = max(xmax, np.max(self.pts[:,0]))
+        ymin = min(ymin, np.min(self.pts[:,1]))
+        ymax = max(ymax, np.max(self.pts[:,1]))
 
-    def log_prior(self, p):
+        return integrate(lambda pts: self.pselect(p, pts)*self.foreground_density(p, pts),
+                         xmin, xmax, ymin, ymax, 1e-10)
+
+    def __call__(self, p):
         p = self.to_params(p)
 
+        dx, dy = p['upper_right'] - p['lower_left']
+        gx, gy = p['gamma']
+
+        # Priors bounds
         if p['A'] < 0 or p['A'] > 1:
             return np.NINF
-        if np.any(p['sigma'] < 0):
-            return np.NINF
-        if p['theta'] < 0 or p['theta'] > np.pi/2.0:
-            return np.NINF
-        if p['p0'] < 0 or np.any(self.geometric_probs(p, self.pts) > 1):
-            return np.NINF
-        if p['sigma_rho'] < 0:
-            return np.NINF
-        if np.any(p['lower_left'] >= p['upper_right']):
-            return np.NINF
-
-        pts = np.array([p['lower_left'], p['upper_right'],
-                        [p['lower_left'][0], p['upper_right'][1]],
-                        [p['upper_right'][0], p['lower_left'][1]]])
-
-        if np.any(self.background_density(p, pts) < 0):
-            return np.NINF
-
-        # Restrict mean to be within distribution
         if np.any(p['mu'] < np.min(self.pts, axis=0)) or \
            np.any(p['mu'] > np.max(self.pts, axis=0)):
             return np.NINF
+        if np.any(p['sigma'] <= 0):
+            return np.NINF
+        if p['theta'] < 0 or p['theta'] > np.pi/2.0:
+            return np.NINF
+        if p['sigma_snr'] <= 0:
+            return np.NINF
+        if np.any(p['upper_right'] <= p['lower_left']):
+            return np.NINF
+        if 1.0 - 0.5*np.abs(dx*gx) - 0.5*np.abs(dy*gy) < 0:
+            return np.NINF
 
-        lp = 0.0
+        alpha = self.alpha(p)
 
-        lp -= 0.5*(np.log(p['A']) + np.log1p(-p['A']))
-        lp -= np.sum(np.log(p['sigma']))
-        lp -= 2.0*np.log(p['sigma_rho'])
-
-        return lp
-
-    def log_likelihood(self, p):
-        p = self.to_params(p)
-
-        alpha = self.foreground_density_norm(p)
-
-        rho_fore = alpha*self.unnormed_foreground_density(p, self.pts)
+        pselects = self.pselect(p, self.pts)
+        rho_fore = self.foreground_density(p, self.pts)
         rho_back = self.background_density(p, self.pts)
 
-        rho = p['A']*rho_fore + (1-p['A'])*rho_back
+        rho = p['A']*pselects*rho_fore/alpha + (1-p['A'])*rho_back
 
-        return np.sum(np.log(rho))
+        ll = np.sum(np.log(rho))
 
-    def __call__(self, p):
-        lp = self.log_prior(p)
+        lp = -np.sum(np.log(p['sigma'])) - np.log(p['sigma_snr']) + 0.5*np.log(np.sum(np.square(p['gamma'])))
 
-        if lp == np.NINF:
-            return np.NINF
-        else:
-            return self.log_likelihood(p) + lp
-        
-    def pfore(self, p, pts):
-        alpha = self.foreground_density_norm(p)
+        return ll + lp
 
-        rho_fore = alpha*self.unnormed_foreground_density(p, pts)
-        rho_back = self.background_density(p, pts)
-
-        return rho_fore / (rho_fore + rho_back)
-
-    def draw_candidates(self, p, N=None):
+    def draw(self, p, N):
         p = self.to_params(p)
 
         cm = self.covariance_matrix(p)
 
-        if N is None:
-            N = self.pts.shape[0]
+        nfore = np.random.binomial(N, p['A'])
+        nback = N-nfore
 
-        Npts = np.random.poisson(N)
+        dx, dy = p['upper_right'] - p['lower_left']
+        gx, gy = p['gamma']
 
-        pts = []
-        while len(pts) < Npts:
-            if np.random.random() < p['A']:
-                # Drawing a planet
-                while True:
-                    logPR = np.random.multivariate_normal(mean=p['mu'], cov=cm)
-                    pselect = self.pselect(p, np.array([logPR]))
+        zmax = 1.0 + 0.5*np.abs(gx*dx) + 0.5*np.abs(gy*dy)
+        d = np.array([dx, dy])
 
-                    if np.random.random() < pselect:
-                        pts.append(logPR)
-                        break
-            else:
-                # Drawing a background
-                x0, y0 = p['lower_left']
-                dx, dy = p['upper_right'] - p['lower_left']
-                gx, gy = p['gamma']
+        back_pts = p['lower_left'] + d*np.random.random(size=(nback, 2))
+        back_sel = zmax*np.random.random(size=nback) > self.background_density(p, back_pts)
+        while np.any(back_sel):
+            nnz = np.count_nonzero(back_sel)
+            back_pts[back_sel, :] = p['lower_left'] + d*np.random.random(size=(nnz,2))
+            back_sel[back_sel] = zmax*np.random.random(size=nnz) > self.background_density(p, back_pts[back_sel,:])
 
-                xmid = x0+dx/2.0
-                ymid = y0+dy/2.0
+        fore_pts = np.random.multivariate_normal(mean=p['mu'], cov=cm, size=nfore)
+        fore_sel = np.random.random(size=nfore) > self.pselect(p, fore_pts)
 
-                rho_max = 1.0/(dx*dy)*(1.0 + 0.5*np.abs(gx*dx) + 0.5*np.abs(gy*dy))
+        while np.any(fore_sel):
+            nnz = np.count_nonzero(fore_sel)
+            fore_pts[fore_sel, :] = np.random.multivariate_normal(mean=p['mu'], cov=cm, size=nnz)
+            fore_sel[fore_sel] = np.random.random(size=nnz) > self.pselect(p, fore_pts[fore_sel, :])
 
-                while True:
-                    x = x0 + dx*np.random.random()
-                    y = x0 + dy*np.random.random()
-                    z = rho_max*np.random.random()
+        pts = np.concatenate((fore_pts, back_pts), axis=0)
 
-                    pt = np.array([x,y])
-
-                    rho = self.background_density(p, np.array([pt]))
-
-                    if rho > z:
-                        pts.append(pt)
-                        break
-
-        return np.array(pts)
+        return np.exp(pts[:,0]), np.exp(pts[:,1])
