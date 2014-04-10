@@ -35,10 +35,10 @@ def integrate(f, xmin, xmax, ymin, ymax, epsrel):
     ys = np.linspace(ymin, ymax, 3)
     k = 1
 
-    XS,YS = np.meshgrid(xs, ys, indexing='ij')
+    XS,YS = np.meshgrid(xs, ys)
     FS = f(np.column_stack((XS.flatten(), YS.flatten()))).reshape(XS.shape)
 
-    I = si.romb(si.romb(FS, axis=1, dx=ys[1]-ys[0]), axis=0, dx=xs[1]-xs[0])
+    I = si.romb(si.romb(FS, axis=0, dx=ys[1]-ys[0]), axis=0, dx=xs[1]-xs[0])
 
     while True:
         FS_old = FS
@@ -54,10 +54,10 @@ def integrate(f, xmin, xmax, ymin, ymax, epsrel):
         xs = np.linspace(xmin, xmax, N)
         ys = np.linspace(ymin, ymax, N)
 
-        XS, YS = np.meshgrid(xs, ys, indexing='ij')
+        XS, YS = np.meshgrid(xs, ys)
         FS = f(np.column_stack((XS.flatten(), YS.flatten()))).reshape(XS.shape)
 
-        I = si.romb(si.romb(FS, axis=1, dx=ys[1]-ys[0]), axis=0, dx=xs[1]-xs[0])
+        I = si.romb(si.romb(FS, axis=0, dx=ys[1]-ys[0]), axis=0, dx=xs[1]-xs[0])
 
         err = 2.0*np.abs(I-I_old)/(np.abs(I) + np.abs(I_old))
 
