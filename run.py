@@ -10,7 +10,7 @@ import posterior
 import uuid
 
 if __name__ == '__main__':
-    threads = 3
+    threads = 15
     walkers = 100
     nstep = 100
     nthin = 10
