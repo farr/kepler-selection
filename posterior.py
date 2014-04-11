@@ -7,108 +7,43 @@ import scipy.special as ss
 import scipy.stats as st
 import warnings
 
-class TooManyPointsError(Exception):
-    def __init__(self, *args, **kwargs):
-        super(TooManyPointsError, self).__init__(*args, **kwargs)
-
-def integrate(f, xmin, xmax, ymin, ymax, epsrel):
-    """Integrate :math:`f(x,y)` over the rectangular domain
-    :math:`(x_\mathrm{min}, y_\mathrm{min}) < (x,y) < (x_\mathrm{max},
-    y_\mathrm{max})`, to an (estimated) relative accuracy of
-    ``epsrel``.
-
-    :param f: Function of two arguments.  Must be able to take an
-      array of shape ``(N, 2)`` and return an array of shape ``(N,)``.
-
-    :param xmin: Lower limit in first argument.
-
-    :param xmax: Upper limit in first argument.
-
-    :param ymin: Lower limit in second argument.
-
-    :param ymax: Upper limit in second argument.
-
-    :param epsrel: Relative error tolerance.
-    """
-
-    xs = np.linspace(xmin, xmax, 3)
-    ys = np.linspace(ymin, ymax, 3)
-    k = 1
-
-    XS,YS = np.meshgrid(xs, ys)
-    FS = f(np.column_stack((XS.flatten(), YS.flatten()))).reshape(XS.shape)
-
-    I = si.romb(si.romb(FS, axis=0, dx=ys[1]-ys[0]), axis=0, dx=xs[1]-xs[0])
-
-    while True:
-        FS_old = FS
-        I_old = I
-
-        k = k+1
-        N = (1<<k) + 1
-
-        if k > 13:
-            # More than 8193 points in each dimension
-            raise TooManyPointsError('more than 2^{0:d} points in each dimension'.format(k))
-
-        xs = np.linspace(xmin, xmax, N)
-        ys = np.linspace(ymin, ymax, N)
-
-        XS, YS = np.meshgrid(xs, ys)
-        FS = f(np.column_stack((XS.flatten(), YS.flatten()))).reshape(XS.shape)
-
-        I = si.romb(si.romb(FS, axis=0, dx=ys[1]-ys[0]), axis=0, dx=xs[1]-xs[0])
-
-        err = 2.0*np.abs(I-I_old)/(np.abs(I) + np.abs(I_old))
-
-        if not (err > epsrel):
-            break
-
-    return I
-
-def load_kepler_data(file):
-    with bz2.BZ2File(file, 'r') as inp:
-        header = inp.readline().split('|')
-        inp.readline()
-        cols = (header.index('Period'), header.index('Planet Radius'), header.index('Kepler Disposition'))
-        data = np.genfromtxt(inp, usecols=cols, delimiter='|', dtype=np.dtype([('P', np.float), ('R', np.float), ('disp', np.str, 100)]))
-
-    data = data[(~np.isnan(data['R'])) & (~np.isnan(data['P'])) & (data['disp'] == 'CANDIDATE')]
-
-    return data
-
 class Posterior(object):
-    def __init__(self, p, r):
+    def __init__(self, p, r, ms, rs, snr0s, multis):
         self.p = p
         self.r = r
-        self.pts = np.log(np.column_stack((p, r)))
+        self.ms = ms
+        self.rs = rs
+        self.snr0s = snr0s
+        self.multis = multis
 
     @property
     def dtype(self):
-        return np.dtype([('A', np.float),
+        return np.dtype([('R', np.float),
+                         ('Rb', np.float),
                          ('mu', np.float, 2),
                          ('sigma', np.float, 2),
                          ('theta', np.float),
-                         ('mu_snr', np.float),
-                         ('sigma_snr', np.float),
+                         ('log_snr_min', np.float),
+                         ('log_snr_max', np.float),
                          ('lower_left', np.float, 2),
                          ('upper_right', np.float, 2),
                          ('gamma', np.float, 2)])
 
     @property
     def pnames(self):
-        return [r'A',
+        return [r'$R$', r'$R_b$',
                 r'$\mu_P$', r'$\mu_R$',
                 r'$\sigma_1$', r'$\sigma_2$',
                 r'$\theta$',
-                r'$\mu_\rho$', r'$\sigma_\rho$',
+                r'$\log\left(\rho_\mathrm{min}\right)$',
+                r'$\log\left(\rho_\mathrm{max}\right)$',
                 r'$P_\mathrm{min}$', r'$R_\mathrm{min}$',
                 r'$P_\mathrm{max}$', r'$R_\mathrm{max}$', r'$\gamma_P$',
                 r'$\gamma_R$']
 
     @property
     def nparams(self):
-        return 14
+        return 15
 
     def to_params(self, p):
         return p.view(self.dtype).squeeze()
@@ -128,22 +63,10 @@ class Posterior(object):
 
         return np.dot(r, np.dot(d, r.T))
 
-    def geometric_pselect(self, pts):
-        return 0.08256960301*np.exp(-2.0/3.0*pts[:,0])
-
-    def snr_pselect(self, p, pts):
+    def foreground_density(self, p, ps, rs):
         p = self.to_params(p)
-        pts = np.atleast_2d(pts)
-        
-        log_snr = 2.0*pts[:,1] - 1.0/3.0*pts[:,0]
 
-        return 1.0/(1.0 + np.exp(-(log_snr - p['mu_snr'])/p['sigma_snr']))
-
-    def pselect(self, p, pts):
-        return self.geometric_pselect(pts)*self.snr_pselect(p, pts)
-
-    def foreground_density(self, p, pts):
-        p = self.to_params(p)
+        pts = np.log(np.column_stack((ps, rs)))
 
         cm = self.covariance_matrix(p, inv=True)
 
@@ -151,10 +74,10 @@ class Posterior(object):
 
         return 1.0/(2.0*np.pi*np.prod(p['sigma']))*np.exp(-0.5*np.sum(xs*np.dot(cm, xs.T).T, axis=1))
 
-    def background_density(self, p, pts=None):
+    def background_density(self, p, ps, rs):
         p = self.to_params(p)
-        if pts is None:
-            pts = self.pts
+
+        pts = np.log(np.column_stack((ps, rs)))
             
         center = 0.5*(p['lower_left'] + p['upper_right'])
         dx = p['upper_right'] - p['lower_left']
@@ -168,26 +91,55 @@ class Posterior(object):
         rhos[sel] = 0.0
         return rhos
 
-    def selected_density(self, p, pts):
-        return self.pselect(p, pts)*self.foreground_density(p, pts)/self.alpha(p)
+    def log_snr(self, ps, rs, snr0s):
+        return 2.0*np.log(rs) - 1.0/3.0*np.log(ps) + np.log(snr0s)
 
-    def alpha(self, p):
+    def ptransit(self, ps, ms, rs):
+        return 0.08195367156*rs/(ms*np.square(ps))**(1.0/3.0)
+
+    def pdetect(self, p, ps, rs, snr0s):
         p = self.to_params(p)
 
+        log_snrs = self.log_snr(ps, rs, snr0s)
+
+        pdets = np.zeros(log_snrs.shape)
+
+        sel = (p['log_snr_min'] < log_snrs) & (log_snrs <= p['log_snr_max'])
+        pdets[sel] = (log_snrs[sel]-p['log_snr_min'])/(p['log_snr_max'] - p['log_snr_min'])
+
+        sel = (p['log_snr_max'] < log_snrs)
+        pdets[sel] = 1.0
+
+        return pdets
+
+    def gaussian_selection_integral(self, mu, sigma, xmin, xmax):
+        dx = xmax - xmin
+        edenom = np.sqrt(2.0)*sigma
+
+        mu_term = 0.5*mu*(ss.erf((mu-xmin)/edenom) - ss.erf((mu-xmax)/edenom))
+        xterm = 0.5*(xmax*ss.erf((mu-xmax)/edenom) - xmin*ss.erf((mu-xmin)/edenom))
+        sigma_term = 1.0/np.sqrt(2.0*np.pi)*sigma*(np.exp(-0.5*np.square((mu-xmin)/sigma)) - np.exp(-0.5*np.square((mu-xmax)/sigma)))
+
+        return 1.0/dx*(mu_term + xterm + sigma_term) + 0.5
+
+    def alpha(self, p, ms, rs, snr0s):
+        p = self.to_params(p)
+
+        mu = p['mu']
         cm = self.covariance_matrix(p)
+        gm = self.covariance_matrix(p, inv=True)
 
-        xmin = p['mu'][0] - 10.0*cm[0,0]
-        xmax = p['mu'][0] + 10.0*cm[0,0]
-        ymin = p['mu'][1] - 10.0*cm[1,1]
-        ymax = p['mu'][1] + 10.0*cm[1,1]
+        gm_det = gm[0,0]*gm[1,1]-gm[0,1]*gm[0,1]
 
-        xmin = min(xmin, np.min(self.pts[:,0]))
-        xmax = max(xmax, np.max(self.pts[:,0]))
-        ymin = min(ymin, np.min(self.pts[:,1]))
-        ymax = max(ymax, np.max(self.pts[:,1]))
+        mu_new = mu - np.array([2.0/3.0*gm[1,1]/gm_det, -2.0/3.0*gm[0,1]/gm_det])
 
-        return integrate(lambda pts: self.pselect(p, pts)*self.foreground_density(p, pts),
-                         xmin, xmax, ymin, ymax, 1e-10)
+        lognorm_norm = np.exp(-2.0/3.0*mu[0] + 2.0/9.0*gm[1,1]/gm_det)
+        geom_factor = 0.08195367156*rs/ms**(1.0/3.0)
+
+        log_snr_mean = 2.0*mu_new[1] - 1.0/3.0*mu_new[0] + np.log(snr0s)
+        log_snr_sigma = np.sqrt(4.0*cm[1,1] - 4.0/3.0*cm[0,1] + 1.0/9.0*cm[0,0])
+
+        return lognorm_norm*geom_factor*self.gaussian_selection_integral(log_snr_mean, log_snr_sigma, p['log_snr_min'], p['log_snr_max'])
 
     def __call__(self, p):
         p = self.to_params(p)
@@ -196,7 +148,7 @@ class Posterior(object):
         gx, gy = p['gamma']
 
         # Priors bounds
-        if p['A'] < 0 or p['A'] > 1:
+        if p['R'] <= 0 or p['Rb'] <= 0:
             return np.NINF
         if np.any(p['mu'] < np.min(self.pts, axis=0)) or \
            np.any(p['mu'] > np.max(self.pts, axis=0)):
@@ -205,24 +157,24 @@ class Posterior(object):
             return np.NINF
         if p['theta'] < 0 or p['theta'] > np.pi/2.0:
             return np.NINF
-        if p['sigma_snr'] <= 0:
+        if p['log_snr_max'] <= p['log_snr_min']:
             return np.NINF
         if np.any(p['upper_right'] <= p['lower_left']):
             return np.NINF
         if 1.0 - 0.5*np.abs(dx*gx) - 0.5*np.abs(dy*gy) < 0:
             return np.NINF
 
-        alpha = self.alpha(p)
+        alphas = self.alpha(p, self.ms, self.rs, self.snr0s)
 
-        pselects = self.pselect(p, self.pts)
-        rho_fore = self.foreground_density(p, self.pts)
-        rho_back = self.background_density(p, self.pts)
+        if np.any(alphas > 1):
+            return np.NINF
 
-        rho = p['A']*pselects*rho_fore/alpha + (1-p['A'])*rho_back
+        Rtotal = p['R']*np.sum(alphas/self.multis) + p['Rb']*np.sum(1.0/self.multis)
+        rhos = p['R']*self.pdetect(p, self.ps, self.rs, self.snr0s)*self.ptransit(self.ps, self.ms, self.rs)*self.foreground_density(p, self.ps, self.rs) + p['Rb']*self.background_density(p, self.ps, self.rs)
 
-        ll = np.sum(np.log(rho))
+        ll = np.sum(np.log(rhos)) - Rtotal
 
-        lp = -np.sum(np.log(p['sigma'])) - np.log(p['sigma_snr']) + 0.5*np.log(np.sum(np.square(p['gamma'])))
+        lp = -np.sum(np.log(p['sigma'])) - 0.5*np.square(p['log_snr_min'] - np.log(3.0)) - 0.5*np.square(p['log_snr_max'] - np.log(9.0)) - 0.5*(np.log(p['R']) + np.log(p['Rb']))
 
         return ll + lp
 
