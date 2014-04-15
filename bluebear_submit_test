@@ -8,4 +8,4 @@
 
 module unload apps/openmpi
 
-python run.py --candidates ../test/candidates.dat.bz2 --systems ../test/systems.dat.bz2 --outdir ../test --threads 15
+python run.py --candidates ../test/candidates.dat.bz2 --systems ../test/systems.dat.bz2 --outdir ../test --threads 15 --walkers 512
