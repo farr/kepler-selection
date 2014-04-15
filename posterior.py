@@ -3,6 +3,7 @@ import glob
 import numpy as np
 import os.path as op
 import scipy.integrate as si
+import scipy.misc as sm
 import scipy.special as ss
 import scipy.stats as st
 
@@ -249,5 +250,14 @@ class Posterior(object):
                                                           ('SNR0', np.float)]))
 
         return candidates
-                                                                     
-        
+
+    def gradient(self, p):
+        g = []
+        for i in range(self.nparams):
+            def f(x):
+                pc = p.copy()
+                pc[i] = x
+                return self.__call__(pc)
+            g.append(sm.derivative(f, p[i], dx=1e-5))
+
+        return np.array(g)
