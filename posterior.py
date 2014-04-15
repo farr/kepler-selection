@@ -5,16 +5,12 @@ import os.path as op
 import scipy.integrate as si
 import scipy.special as ss
 import scipy.stats as st
-import warnings
 
 class Posterior(object):
-    def __init__(self, p, r, ms, rs, snr0s, multis):
-        self.p = p
-        self.r = r
-        self.ms = ms
-        self.rs = rs
-        self.snr0s = snr0s
-        self.multis = multis
+    def __init__(self, candidates, systems):
+        self.candidates = candidates
+        self.systems = systems
+        self.pts = np.log(np.column_stack((candidates['Period'], candidates['Radius'])))
 
     @property
     def dtype(self):
@@ -77,6 +73,9 @@ class Posterior(object):
     def background_density(self, p, ps, rs):
         p = self.to_params(p)
 
+        ps = np.atleast_1d(ps)
+        rs = np.atleast_1d(rs)
+
         pts = np.log(np.column_stack((ps, rs)))
             
         center = 0.5*(p['lower_left'] + p['upper_right'])
@@ -94,13 +93,19 @@ class Posterior(object):
     def log_snr(self, ps, rs, snr0s):
         return 2.0*np.log(rs) - 1.0/3.0*np.log(ps) + np.log(snr0s)
 
+    @property
+    def transit_selection_factor(self):
+        return 0.001603891301 # Probability of detecting in yr orbit
+                              # around sun.
+
     def ptransit(self, ps, ms, rs):
-        return 0.08195367156*rs/(ms*np.square(ps))**(1.0/3.0)
+        return self.transit_selection_factor*rs/(ms*np.square(ps))**(1.0/3.0)
 
     def pdetect(self, p, ps, rs, snr0s):
         p = self.to_params(p)
 
         log_snrs = self.log_snr(ps, rs, snr0s)
+        log_snrs = np.atleast_1d(log_snrs)
 
         pdets = np.zeros(log_snrs.shape)
 
@@ -134,7 +139,7 @@ class Posterior(object):
         mu_new = mu - np.array([2.0/3.0*gm[1,1]/gm_det, -2.0/3.0*gm[0,1]/gm_det])
 
         lognorm_norm = np.exp(-2.0/3.0*mu[0] + 2.0/9.0*gm[1,1]/gm_det)
-        geom_factor = 0.08195367156*rs/ms**(1.0/3.0)
+        geom_factor = self.transit_selection_factor*rs/ms**(1.0/3.0)
 
         log_snr_mean = 2.0*mu_new[1] - 1.0/3.0*mu_new[0] + np.log(snr0s)
         log_snr_sigma = np.sqrt(4.0*cm[1,1] - 4.0/3.0*cm[0,1] + 1.0/9.0*cm[0,0])
@@ -164,49 +169,85 @@ class Posterior(object):
         if 1.0 - 0.5*np.abs(dx*gx) - 0.5*np.abs(dy*gy) < 0:
             return np.NINF
 
-        alphas = self.alpha(p, self.ms, self.rs, self.snr0s)
+        alphas = self.alpha(p, self.systems['Mass'], self.systems['Radius'], self.systems['SNR0'])
 
         if np.any(alphas > 1):
             return np.NINF
 
-        Rtotal = p['R']*np.sum(alphas/self.multis) + p['Rb']*np.sum(1.0/self.multis)
-        rhos = p['R']*self.pdetect(p, self.ps, self.rs, self.snr0s)*self.ptransit(self.ps, self.ms, self.rs)*self.foreground_density(p, self.ps, self.rs) + p['Rb']*self.background_density(p, self.ps, self.rs)
+        Rtotal = p['R']*np.sum(alphas) + p['Rb']*self.systems.shape[0]
+        rhos = p['R']*self.pdetect(p, self.candidates['Period'], self.candidates['Radius'], self.candidates['SNR0'])*self.ptransit(self.candidates['Period'], self.candidates['Stellar_Mass'], self.candidates['Stellar_Radius'])*self.foreground_density(p, self.candidates['Period'], self.candidates['Radius']) + p['Rb']*self.background_density(p, self.candidates['Period'], self.candidates['Radius'])
 
         ll = np.sum(np.log(rhos)) - Rtotal
 
-        lp = -np.sum(np.log(p['sigma'])) - 0.5*np.square(p['log_snr_min'] - np.log(3.0)) - 0.5*np.square(p['log_snr_max'] - np.log(9.0)) - 0.5*(np.log(p['R']) + np.log(p['Rb']))
+        lp = -np.sum(np.log(p['sigma'])) - 0.5*np.square(p['log_snr_min'] - np.log(3.0)) - 0.5*np.square(p['log_snr_max'] - np.log(11.0)) - 0.5*(np.log(p['R']*np.sum(alphas)) + np.log(p['Rb']))
 
         return ll + lp
 
-    def draw(self, p, N):
+    def draw_background(self, p, N):
         p = self.to_params(p)
-
-        cm = self.covariance_matrix(p)
-
-        nfore = np.random.binomial(N, p['A'])
-        nback = N-nfore
 
         dx, dy = p['upper_right'] - p['lower_left']
         gx, gy = p['gamma']
+        V = dx*dy
 
-        zmax = 1.0 + 0.5*np.abs(gx*dx) + 0.5*np.abs(gy*dy)
-        d = np.array([dx, dy])
+        pmax = 1.0/V*(1.0 + 0.5*np.abs(dx*gx) + 0.5*np.abs(dy*gy))
 
-        back_pts = p['lower_left'] + d*np.random.random(size=(nback, 2))
-        back_sel = zmax*np.random.random(size=nback) > self.background_density(p, back_pts)
-        while np.any(back_sel):
-            nnz = np.count_nonzero(back_sel)
-            back_pts[back_sel, :] = p['lower_left'] + d*np.random.random(size=(nnz,2))
-            back_sel[back_sel] = zmax*np.random.random(size=nnz) > self.background_density(p, back_pts[back_sel,:])
+        pts = []
+        while len(pts) < N:
+            x,y,z = np.random.random(size=3)
 
-        fore_pts = np.random.multivariate_normal(mean=p['mu'], cov=cm, size=nfore)
-        fore_sel = np.random.random(size=nfore) > self.pselect(p, fore_pts)
+            x = p['lower_left'][0] + dx*x
+            y = p['lower_left'][1] + dy*y
+            z = z*pmax
 
-        while np.any(fore_sel):
-            nnz = np.count_nonzero(fore_sel)
-            fore_pts[fore_sel, :] = np.random.multivariate_normal(mean=p['mu'], cov=cm, size=nnz)
-            fore_sel[fore_sel] = np.random.random(size=nnz) > self.pselect(p, fore_pts[fore_sel, :])
+            x = np.exp(x)
+            y = np.exp(y)
 
-        pts = np.concatenate((fore_pts, back_pts), axis=0)
+            if z < self.background_density(p, x, y):
+                pts.append(np.array([x,y]))
 
-        return np.exp(pts[:,0]), np.exp(pts[:,1])
+        return np.array(pts)
+
+    def draw(self, p0, ids, masses, radii, snr0s):
+        p0 = self.to_params(p0)
+
+        fs = []
+        bs = []
+
+        mu = p0['mu']
+        cm = self.covariance_matrix(p0)
+
+        # Draw foreground events
+        for id, m, r, s in zip(ids, masses, radii, snr0s):
+            n = np.random.poisson(p0['R'])
+            if n > 0:
+                pts = np.random.multivariate_normal(mean=mu, cov=cm, size=n)
+
+                for p in pts:
+                    P = np.exp(p[0])
+                    R = np.exp(p[1])
+
+                    pselect = self.pdetect(p0, P, R, s)*self.ptransit(P, m, r)
+
+                    if np.random.random() < pselect:
+                        fs.append((int(id), P, R, r, m, s))
+
+            n = np.random.poisson(p0['Rb'])
+            if n > 0:
+                ps_rs = self.draw_background(p0, n)
+
+                for P, R in ps_rs:
+                    bs.append((int(id), P, R, r, m, s))
+
+        candidates = fs + bs
+                    
+        candidates = np.array(candidates, dtype=np.dtype([('Kepler_ID', np.int),
+                                                          ('Period', np.float),
+                                                          ('Radius', np.float),
+                                                          ('Stellar_Radius', np.float),
+                                                          ('Stellar_Mass', np.float),
+                                                          ('SNR0', np.float)]))
+
+        return candidates
+                                                                     
+        
