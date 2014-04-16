@@ -8,10 +8,20 @@ import scipy.special as ss
 import scipy.stats as st
 
 class Posterior(object):
-    def __init__(self, candidates, systems):
+    def __init__(self, candidates, systems, lower_left=None, upper_right=None):
         self.candidates = candidates
         self.systems = systems
         self.pts = np.log(np.column_stack((candidates['Period'], candidates['Radius'])))
+
+        if lower_left is None:
+            self.lower_left = np.min(self.pts, axis=0)
+        else:
+            self.lower_left = lower_left
+
+        if upper_right is None:
+            self.upper_right = np.max(self.pts, axis=0)
+        else:
+            self.upper_right = upper_right
 
     @property
     def dtype(self):
@@ -22,8 +32,6 @@ class Posterior(object):
                          ('theta', np.float),
                          ('log_snr_min', np.float),
                          ('log_snr_max', np.float),
-                         ('lower_left', np.float, 2),
-                         ('upper_right', np.float, 2),
                          ('gamma', np.float, 2)])
 
     @property
@@ -34,13 +42,11 @@ class Posterior(object):
                 r'$\theta$',
                 r'$\log\left(\rho_\mathrm{min}\right)$',
                 r'$\log\left(\rho_\mathrm{max}\right)$',
-                r'$P_\mathrm{min}$', r'$R_\mathrm{min}$',
-                r'$P_\mathrm{max}$', r'$R_\mathrm{max}$', r'$\gamma_P$',
-                r'$\gamma_R$']
+                r'$\gamma_P$', r'$\gamma_R$']
 
     @property
     def nparams(self):
-        return 15
+        return 11
 
     def to_params(self, p):
         return p.view(self.dtype).squeeze()
@@ -79,13 +85,13 @@ class Posterior(object):
 
         pts = np.log(np.column_stack((ps, rs)))
             
-        center = 0.5*(p['lower_left'] + p['upper_right'])
-        dx = p['upper_right'] - p['lower_left']
+        center = 0.5*(self.lower_left + self.upper_right)
+        dx = self.upper_right - self.lower_left
         V = np.prod(dx)
         
         rhos = 1.0/V*(1.0 + np.dot(p['gamma'], (pts - center).T))
 
-        sel = (pts < p['lower_left']) | (pts > p['upper_right'])
+        sel = (pts < self.lower_left) | (pts > self.upper_right)
         sel = sel[:,0] | sel[:,1]
 
         rhos[sel] = 0.0
@@ -150,7 +156,7 @@ class Posterior(object):
     def __call__(self, p):
         p = self.to_params(p)
 
-        dx, dy = p['upper_right'] - p['lower_left']
+        dx, dy = self.upper_right - self.lower_left
         gx, gy = p['gamma']
 
         # Priors bounds
@@ -164,8 +170,6 @@ class Posterior(object):
         if p['theta'] < 0 or p['theta'] > np.pi/2.0:
             return np.NINF
         if p['log_snr_max'] <= p['log_snr_min']:
-            return np.NINF
-        if np.any(p['upper_right'] <= p['lower_left']):
             return np.NINF
         if 1.0 - 0.5*np.abs(dx*gx) - 0.5*np.abs(dy*gy) < 0:
             return np.NINF
@@ -187,7 +191,7 @@ class Posterior(object):
     def draw_background(self, p, N):
         p = self.to_params(p)
 
-        dx, dy = p['upper_right'] - p['lower_left']
+        dx, dy = self.upper_right - self.lower_left
         gx, gy = p['gamma']
         V = dx*dy
 
@@ -197,8 +201,8 @@ class Posterior(object):
         while len(pts) < N:
             x,y,z = np.random.random(size=3)
 
-            x = p['lower_left'][0] + dx*x
-            y = p['lower_left'][1] + dy*y
+            x = self.lower_left[0] + dx*x
+            y = self.lower_left[1] + dy*y
             z = z*pmax
 
             x = np.exp(x)
