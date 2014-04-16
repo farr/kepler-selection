@@ -8,7 +8,45 @@ import scipy.special as ss
 import scipy.stats as st
 
 class Posterior(object):
+    """Class representing a posterior object for the selection-effects
+    model of the observed Kepler planet number density in the
+    period-radius plane.
+
+    """
+
     def __init__(self, candidates, systems, lower_left=None, upper_right=None):
+        r"""Initialise the posterior object.  
+
+        :param candidates: An array with the columns 
+
+           * ``Kepler_ID``
+           * ``Period``, period in years of candidate.
+           * ``Radius``, radius in Earth radii of candidate.
+           * ``Stellar_Radius``, radius in Solar radii of host star.
+           * ``Stellar_Mass``, mass in Solar masses of host star.
+           * ``SNR0``, SNR of 1 REarth planet in orbit at 1 yr.
+
+          giving the properties of the identified planetary
+          candidates.
+
+        :param systems: An array with the columns
+
+           * ``Kepler_ID``
+           * ``Radius`` giving the radius in Solar radii
+           * ``Mass`` giving the mass in Solar masses
+           * ``SNR0`` giving the SNR of a 1 REarth planet in orbit at 1 yr.
+
+          giving the properties of the stars in the observing program
+          involved in the search.
+
+        :param lower_left: The lower left boundary of the background
+          distribution in the :math:`\ln(P)`-:math:`\ln(R)` plane.  If
+          ``None``, then the most extreme candidate point will be
+          used.
+
+        :param upper_right: See ``lower_left``.
+
+        """
         self.candidates = candidates
         self.systems = systems
         self.pts = np.log(np.column_stack((candidates['Period'], candidates['Radius'])))
@@ -25,6 +63,10 @@ class Posterior(object):
 
     @property
     def dtype(self):
+        """Gives the numpy datatype of the parameters.
+
+        """
+
         return np.dtype([('R', np.float),
                          ('Rb', np.float),
                          ('mu', np.float, 2),
@@ -36,6 +78,10 @@ class Posterior(object):
 
     @property
     def pnames(self):
+        """Gives LaTeX names for the parameters.
+
+        """
+
         return [r'$R$', r'$R_b$',
                 r'$\mu_P$', r'$\mu_R$',
                 r'$\sigma_1$', r'$\sigma_2$',
@@ -46,12 +92,20 @@ class Posterior(object):
 
     @property
     def nparams(self):
+        """The number of parameters."""
         return 11
 
     def to_params(self, p):
+        """Converts the array ``p`` to a named-array representing parameters.
+
+        """
         return p.view(self.dtype).squeeze()
 
     def covariance_matrix(self, p, inv=False):
+        """Returns the covariance matrix (or inverse, if ``inv=True``)
+        corresponding to the parameters ``p``.
+
+        """
         p = self.to_params(p)
 
         if inv:
@@ -67,6 +121,10 @@ class Posterior(object):
         return np.dot(r, np.dot(d, r.T))
 
     def foreground_density(self, p, ps, rs):
+        """Returns the true foreground density for the given parameters and
+        planet periods and radii (in years and Earth radii, respectively).
+
+        """
         p = self.to_params(p)
 
         pts = np.log(np.column_stack((ps, rs)))
@@ -78,6 +136,11 @@ class Posterior(object):
         return 1.0/(2.0*np.pi*np.prod(p['sigma']))*np.exp(-0.5*np.sum(xs*np.dot(cm, xs.T).T, axis=1))
 
     def background_density(self, p, ps, rs):
+        """Return the background density at the given points in the
+        period-radius plane.
+
+        """
+
         p = self.to_params(p)
 
         ps = np.atleast_1d(ps)
@@ -98,17 +161,33 @@ class Posterior(object):
         return rhos
 
     def log_snr(self, ps, rs, snr0s):
+        """Returns the log of the SNR for the given periods and radii around
+        stars with the given SNR0s.
+
+        """
         return 2.0*np.log(rs) - 1.0/3.0*np.log(ps) + np.log(snr0s)
 
     @property
     def transit_selection_factor(self):
+        """Probability of transit in a 1yr orbit about the sun.
+
+        """
         return 0.001603891301 # Probability of detecting in yr orbit
                               # around sun.
 
     def ptransit(self, ps, ms, rs):
+        """Returns the probability of a transit at the given periods around
+        stars of the given masses and radii.
+
+        """
         return self.transit_selection_factor*rs/(ms*np.square(ps))**(1.0/3.0)
 
     def pdetect(self, p, ps, rs, snr0s):
+        """Returns the detection probability assuming that a planet transits
+        given parameters ``p``, periods ``ps``, planetary radii
+        ``rs``, and stellar SNRs ``snr0s``.
+
+        """
         p = self.to_params(p)
 
         log_snrs = self.log_snr(ps, rs, snr0s)
@@ -125,6 +204,14 @@ class Posterior(object):
         return pdets
 
     def gaussian_selection_integral(self, mu, sigma, xmin, xmax):
+        r"""Evaluates 
+
+        .. math::
+
+          \int_{x_\mathrm{min}}^{x_\mathrm{max}} dx\, \phi(x) \frac{x-x_\mathrm{min}}{x_\mathrm{max}-x_\mathrm{min}} + \int_{x_\mathrm{max}}^\infty dx \, \phi(x)
+
+        """
+
         dx = xmax - xmin
         edenom = np.sqrt(2.0)*sigma
 
@@ -135,6 +222,13 @@ class Posterior(object):
         return 1.0/dx*(mu_term + xterm + sigma_term) + 0.5
 
     def alpha(self, p, ms, rs, snr0s):
+        """Returns the average probability over the planetary period-radius
+        distribution of detecting a planet (transit probability times
+        detection probability) about stars with the given masses,
+        radii, and SNRs.
+
+        """
+
         p = self.to_params(p)
 
         mu = p['mu']
@@ -154,6 +248,10 @@ class Posterior(object):
         return lognorm_norm*geom_factor*self.gaussian_selection_integral(log_snr_mean, log_snr_sigma, p['log_snr_min'], p['log_snr_max'])
 
     def __call__(self, p):
+        """Returns the posterior evaluated at ``p``.
+
+        """
+
         p = self.to_params(p)
 
         dx, dy = self.upper_right - self.lower_left
@@ -189,6 +287,11 @@ class Posterior(object):
         return ll + lp
 
     def draw_background(self, p, N):
+        """Draw ``N`` systems from the background distribution specified by
+        parameters ``p``.
+
+        """
+
         p = self.to_params(p)
 
         dx, dy = self.upper_right - self.lower_left
@@ -214,6 +317,12 @@ class Posterior(object):
         return np.array(pts)
 
     def draw(self, p0, ids, masses, radii, snr0s):
+        """Draw planets and background "detections" around the stars with the
+        given masses, radii, and SNRs as described by the model
+        parameters ``p0``.
+
+        """
+
         p0 = self.to_params(p0)
 
         fs = []
@@ -256,6 +365,11 @@ class Posterior(object):
         return candidates
 
     def gradient(self, p):
+        """Returns a numerical approximation to the gradient of the posterior
+        at the point ``p``.
+
+        """
+
         g = []
         for i in range(self.nparams):
             def f(x):
