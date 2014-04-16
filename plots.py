@@ -2,6 +2,11 @@ import matplotlib.pyplot as pp
 import numpy as np
 
 def plot_error_ellipse(logpost, p):
+    """Plots the location of the mean and the 1-sigma error ellipse in the
+    P-R plane for the given params.
+
+    """
+
     p = logpost.to_params(p)
 
     pp.plot(np.exp(p['mu'][0]), np.exp(p['mu'][1]), '.k')
@@ -25,6 +30,12 @@ def plot_error_ellipse(logpost, p):
     pp.yscale('log')
 
 def plot_error_ellipse_and_bounds(logpost, p):
+    """Plots the location of the mean, the 1-sigma error ellipse and the
+    background distribution bounds in the P-R plane for the given
+    params.
+
+    """
+
     p = logpost.to_params(p)
 
     plot_error_ellipse(logpost, p)
@@ -34,6 +45,11 @@ def plot_error_ellipse_and_bounds(logpost, p):
     pp.axhline(np.exp(logpost.upper_right[1]), color='k')
 
 def plot_true_foreground_density(logpost, p):
+    """Plots the true (un-selected) foreground density in the P-R plane at
+    the indicated parameters.
+
+    """
+
     p = logpost.to_params(p)
         
     cm = logpost.covariance_matrix(p)
@@ -51,3 +67,23 @@ def plot_true_foreground_density(logpost, p):
     pp.pcolormesh(XS, YS, ZS)
     pp.xscale('log')
     pp.yscale('log')
+
+def eta_earths(logpost, chain):
+    r"""Returns an array of :math:`\eta_\oplus` computed at each parameter
+    sample in the given chain.
+
+    :math:`\eta_\oplus` is defined as 
+
+    .. math::
+
+      \eta_\oplus \equiv \left. \frac{d N}{d (\ln R) \, d (\ln P)} \right|_{P = 1 \mathrm{ yr}, R = 1 R_\oplus}
+
+    where :math:`N` is the number of planets per star.
+
+    """
+
+    flatchain = chain.reshape((-1, chain.shape[2]))
+
+    eas = np.array([p[0]*logpost.foreground_density(p, np.array([[1.0]]), np.array([[1.0]])) for p in flatchain])
+
+    return eas.squeeze()
