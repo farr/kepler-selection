@@ -1,0 +1,280 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Welcome to Kepler Planet Distribution Function’s documentation! &mdash; Kepler Planet Distribution Function 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Kepler Planet Distribution Function 0.1 documentation" href="#" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="#">Kepler Planet Distribution Function 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="welcome-to-kepler-planet-distribution-function-s-documentation">
+<h1>Welcome to Kepler Planet Distribution Function&#8217;s documentation!<a class="headerlink" href="#welcome-to-kepler-planet-distribution-function-s-documentation" title="Permalink to this headline">¶</a></h1>
+<p>Contents:</p>
+<div class="toctree-wrapper compound">
+<ul class="simple">
+</ul>
+</div>
+<div class="section" id="module-posterior">
+<span id="posterior-module"></span><h2><a class="reference internal" href="#module-posterior" title="posterior"><tt class="xref py py-mod docutils literal"><span class="pre">posterior</span></tt></a> Module<a class="headerlink" href="#module-posterior" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="posterior.Posterior">
+<em class="property">class </em><tt class="descclassname">posterior.</tt><tt class="descname">Posterior</tt><big>(</big><em>candidates</em>, <em>systems</em>, <em>lower_left=None</em>, <em>upper_right=None</em><big>)</big><a class="reference internal" href="_modules/posterior.html#Posterior"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#posterior.Posterior" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Class representing a posterior object for the selection-effects
+model of the observed Kepler planet number density in the
+period-radius plane.</p>
+<dl class="method">
+<dt id="posterior.Posterior.alpha">
+<tt class="descname">alpha</tt><big>(</big><em>p</em>, <em>ms</em>, <em>rs</em>, <em>snr0s</em><big>)</big><a class="reference internal" href="_modules/posterior.html#Posterior.alpha"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#posterior.Posterior.alpha" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the average probability over the planetary period-radius
+distribution of detecting a planet (transit probability times
+detection probability) about stars with the given masses,
+radii, and SNRs.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="posterior.Posterior.background_density">
+<tt class="descname">background_density</tt><big>(</big><em>p</em>, <em>ps</em>, <em>rs</em><big>)</big><a class="reference internal" href="_modules/posterior.html#Posterior.background_density"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#posterior.Posterior.background_density" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the background density at the given points in the
+period-radius plane.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="posterior.Posterior.covariance_matrix">
+<tt class="descname">covariance_matrix</tt><big>(</big><em>p</em>, <em>inv=False</em><big>)</big><a class="reference internal" href="_modules/posterior.html#Posterior.covariance_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#posterior.Posterior.covariance_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the covariance matrix (or inverse, if <tt class="docutils literal"><span class="pre">inv=True</span></tt>)
+corresponding to the parameters <tt class="docutils literal"><span class="pre">p</span></tt>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="posterior.Posterior.draw">
+<tt class="descname">draw</tt><big>(</big><em>p0</em>, <em>ids</em>, <em>masses</em>, <em>radii</em>, <em>snr0s</em><big>)</big><a class="reference internal" href="_modules/posterior.html#Posterior.draw"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#posterior.Posterior.draw" title="Permalink to this definition">¶</a></dt>
+<dd><p>Draw planets and background &#8220;detections&#8221; around the stars with the
+given masses, radii, and SNRs as described by the model
+parameters <tt class="docutils literal"><span class="pre">p0</span></tt>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="posterior.Posterior.draw_background">
+<tt class="descname">draw_background</tt><big>(</big><em>p</em>, <em>N</em><big>)</big><a class="reference internal" href="_modules/posterior.html#Posterior.draw_background"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#posterior.Posterior.draw_background" title="Permalink to this definition">¶</a></dt>
+<dd><p>Draw <tt class="docutils literal"><span class="pre">N</span></tt> systems from the background distribution specified by
+parameters <tt class="docutils literal"><span class="pre">p</span></tt>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="posterior.Posterior.dtype">
+<tt class="descname">dtype</tt><a class="reference internal" href="_modules/posterior.html#Posterior.dtype"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#posterior.Posterior.dtype" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gives the numpy datatype of the parameters.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="posterior.Posterior.foreground_density">
+<tt class="descname">foreground_density</tt><big>(</big><em>p</em>, <em>ps</em>, <em>rs</em><big>)</big><a class="reference internal" href="_modules/posterior.html#Posterior.foreground_density"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#posterior.Posterior.foreground_density" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the true foreground density for the given parameters and
+planet periods and radii (in years and Earth radii, respectively).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="posterior.Posterior.gaussian_selection_integral">
+<tt class="descname">gaussian_selection_integral</tt><big>(</big><em>mu</em>, <em>sigma</em>, <em>xmin</em>, <em>xmax</em><big>)</big><a class="reference internal" href="_modules/posterior.html#Posterior.gaussian_selection_integral"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#posterior.Posterior.gaussian_selection_integral" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates</p>
+<div class="math">
+\[\int_{x_\mathrm{min}}^{x_\mathrm{max}} dx\, \phi(x) \frac{x-x_\mathrm{min}}{x_\mathrm{max}-x_\mathrm{min}} + \int_{x_\mathrm{max}}^\infty dx \, \phi(x)\]</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="posterior.Posterior.gradient">
+<tt class="descname">gradient</tt><big>(</big><em>p</em><big>)</big><a class="reference internal" href="_modules/posterior.html#Posterior.gradient"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#posterior.Posterior.gradient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a numerical approximation to the gradient of the posterior
+at the point <tt class="docutils literal"><span class="pre">p</span></tt>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="posterior.Posterior.log_snr">
+<tt class="descname">log_snr</tt><big>(</big><em>ps</em>, <em>rs</em>, <em>snr0s</em><big>)</big><a class="reference internal" href="_modules/posterior.html#Posterior.log_snr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#posterior.Posterior.log_snr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the log of the SNR for the given periods and radii around
+stars with the given SNR0s.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="posterior.Posterior.nparams">
+<tt class="descname">nparams</tt><a class="reference internal" href="_modules/posterior.html#Posterior.nparams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#posterior.Posterior.nparams" title="Permalink to this definition">¶</a></dt>
+<dd><p>The number of parameters.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="posterior.Posterior.pdetect">
+<tt class="descname">pdetect</tt><big>(</big><em>p</em>, <em>ps</em>, <em>rs</em>, <em>snr0s</em><big>)</big><a class="reference internal" href="_modules/posterior.html#Posterior.pdetect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#posterior.Posterior.pdetect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the detection probability assuming that a planet transits
+given parameters <tt class="docutils literal"><span class="pre">p</span></tt>, periods <tt class="docutils literal"><span class="pre">ps</span></tt>, planetary radii
+<tt class="docutils literal"><span class="pre">rs</span></tt>, and stellar SNRs <tt class="docutils literal"><span class="pre">snr0s</span></tt>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="posterior.Posterior.pnames">
+<tt class="descname">pnames</tt><a class="reference internal" href="_modules/posterior.html#Posterior.pnames"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#posterior.Posterior.pnames" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gives LaTeX names for the parameters.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="posterior.Posterior.ptransit">
+<tt class="descname">ptransit</tt><big>(</big><em>ps</em>, <em>ms</em>, <em>rs</em><big>)</big><a class="reference internal" href="_modules/posterior.html#Posterior.ptransit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#posterior.Posterior.ptransit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the probability of a transit at the given periods around
+stars of the given masses and radii.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="posterior.Posterior.to_params">
+<tt class="descname">to_params</tt><big>(</big><em>p</em><big>)</big><a class="reference internal" href="_modules/posterior.html#Posterior.to_params"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#posterior.Posterior.to_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts the array <tt class="docutils literal"><span class="pre">p</span></tt> to a named-array representing parameters.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="posterior.Posterior.transit_selection_factor">
+<tt class="descname">transit_selection_factor</tt><a class="reference internal" href="_modules/posterior.html#Posterior.transit_selection_factor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#posterior.Posterior.transit_selection_factor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Probability of transit in a 1yr orbit about the sun.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-plots">
+<span id="plots-module"></span><h2><a class="reference internal" href="#module-plots" title="plots"><tt class="xref py py-mod docutils literal"><span class="pre">plots</span></tt></a> Module<a class="headerlink" href="#module-plots" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="plots.eta_earths">
+<tt class="descclassname">plots.</tt><tt class="descname">eta_earths</tt><big>(</big><em>logpost</em>, <em>chain</em><big>)</big><a class="reference internal" href="_modules/plots.html#eta_earths"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plots.eta_earths" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns an array of <span class="math">\(\eta_\oplus\)</span> computed at each parameter
+sample in the given chain.</p>
+<p><span class="math">\(\eta_\oplus\)</span> is defined as</p>
+<div class="math">
+\[\eta_\oplus \equiv \left. \frac{d N}{d (\ln R) \, d (\ln P)} \right|_{P = 1 \mathrm{ yr}, R = 1 R_\oplus}\]</div>
+<p>where <span class="math">\(N\)</span> is the number of planets per star.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="plots.plot_error_ellipse">
+<tt class="descclassname">plots.</tt><tt class="descname">plot_error_ellipse</tt><big>(</big><em>logpost</em>, <em>p</em><big>)</big><a class="reference internal" href="_modules/plots.html#plot_error_ellipse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plots.plot_error_ellipse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots the location of the mean and the 1-sigma error ellipse in the
+P-R plane for the given params.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="plots.plot_error_ellipse_and_bounds">
+<tt class="descclassname">plots.</tt><tt class="descname">plot_error_ellipse_and_bounds</tt><big>(</big><em>logpost</em>, <em>p</em><big>)</big><a class="reference internal" href="_modules/plots.html#plot_error_ellipse_and_bounds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plots.plot_error_ellipse_and_bounds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots the location of the mean, the 1-sigma error ellipse and the
+background distribution bounds in the P-R plane for the given
+params.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="plots.plot_true_foreground_density">
+<tt class="descclassname">plots.</tt><tt class="descname">plot_true_foreground_density</tt><big>(</big><em>logpost</em>, <em>p</em><big>)</big><a class="reference internal" href="_modules/plots.html#plot_true_foreground_density"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plots.plot_true_foreground_density" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots the true (un-selected) foreground density in the P-R plane at
+the indicated parameters.</p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><em>Index</em></a></li>
+<li><a class="reference internal" href="py-modindex.html"><em>Module Index</em></a></li>
+<li><a class="reference internal" href="search.html"><em>Search Page</em></a></li>
+</ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Welcome to Kepler Planet Distribution Function&#8217;s documentation!</a><ul>
+<li><a class="reference internal" href="#module-posterior"><tt class="docutils literal"><span class="pre">posterior</span></tt> Module</a></li>
+<li><a class="reference internal" href="#module-plots"><tt class="docutils literal"><span class="pre">plots</span></tt> Module</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/index.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="#">Kepler Planet Distribution Function 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Will M. Farr.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

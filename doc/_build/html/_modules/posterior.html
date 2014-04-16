@@ -1,0 +1,474 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>posterior &mdash; Kepler Planet Distribution Function 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Kepler Planet Distribution Function 0.1 documentation" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">Kepler Planet Distribution Function 0.1 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for posterior</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">bz2</span>
+<span class="kn">import</span> <span class="nn">glob</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">os.path</span> <span class="kn">as</span> <span class="nn">op</span>
+<span class="kn">import</span> <span class="nn">scipy.integrate</span> <span class="kn">as</span> <span class="nn">si</span>
+<span class="kn">import</span> <span class="nn">scipy.misc</span> <span class="kn">as</span> <span class="nn">sm</span>
+<span class="kn">import</span> <span class="nn">scipy.special</span> <span class="kn">as</span> <span class="nn">ss</span>
+<span class="kn">import</span> <span class="nn">scipy.stats</span> <span class="kn">as</span> <span class="nn">st</span>
+
+<div class="viewcode-block" id="Posterior"><a class="viewcode-back" href="../index.html#posterior.Posterior">[docs]</a><span class="k">class</span> <span class="nc">Posterior</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a posterior object for the selection-effects</span>
+<span class="sd">    model of the observed Kepler planet number density in the</span>
+<span class="sd">    period-radius plane.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">candidates</span><span class="p">,</span> <span class="n">systems</span><span class="p">,</span> <span class="n">lower_left</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">upper_right</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot;Initialise the posterior object.  </span>
+
+<span class="sd">        :param candidates: An array with the columns </span>
+
+<span class="sd">           * ``Kepler_ID``</span>
+<span class="sd">           * ``Period``, period in years of candidate.</span>
+<span class="sd">           * ``Radius``, radius in Earth radii of candidate.</span>
+<span class="sd">           * ``Stellar_Radius``, radius in Solar radii of host star.</span>
+<span class="sd">           * ``Stellar_Mass``, mass in Solar masses of host star.</span>
+<span class="sd">           * ``SNR0``, SNR of 1 REarth planet in orbit at 1 yr.</span>
+
+<span class="sd">          giving the properties of the identified planetary</span>
+<span class="sd">          candidates.</span>
+
+<span class="sd">        :param systems: An array with the columns</span>
+
+<span class="sd">           * ``Kepler_ID``</span>
+<span class="sd">           * ``Radius`` giving the radius in Solar radii</span>
+<span class="sd">           * ``Mass`` giving the mass in Solar masses</span>
+<span class="sd">           * ``SNR0`` giving the SNR of a 1 REarth planet in orbit at 1 yr.</span>
+
+<span class="sd">          giving the properties of the stars in the observing program</span>
+<span class="sd">          involved in the search.</span>
+
+<span class="sd">        :param lower_left: The lower left boundary of the background</span>
+<span class="sd">          distribution in the :math:`\ln(P)`-:math:`\ln(R)` plane.  If</span>
+<span class="sd">          ``None``, then the most extreme candidate point will be</span>
+<span class="sd">          used.</span>
+
+<span class="sd">        :param upper_right: See ``lower_left``.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">candidates</span> <span class="o">=</span> <span class="n">candidates</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">systems</span> <span class="o">=</span> <span class="n">systems</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">((</span><span class="n">candidates</span><span class="p">[</span><span class="s">&#39;Period&#39;</span><span class="p">],</span> <span class="n">candidates</span><span class="p">[</span><span class="s">&#39;Radius&#39;</span><span class="p">])))</span>
+
+        <span class="k">if</span> <span class="n">lower_left</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lower_left</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pts</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lower_left</span> <span class="o">=</span> <span class="n">lower_left</span>
+
+        <span class="k">if</span> <span class="n">upper_right</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">upper_right</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pts</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">upper_right</span> <span class="o">=</span> <span class="n">upper_right</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Posterior.dtype"><a class="viewcode-back" href="../index.html#posterior.Posterior.dtype">[docs]</a>    <span class="k">def</span> <span class="nf">dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gives the numpy datatype of the parameters.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">([(</span><span class="s">&#39;R&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">),</span>
+                         <span class="p">(</span><span class="s">&#39;Rb&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">),</span>
+                         <span class="p">(</span><span class="s">&#39;mu&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+                         <span class="p">(</span><span class="s">&#39;sigma&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+                         <span class="p">(</span><span class="s">&#39;theta&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">),</span>
+                         <span class="p">(</span><span class="s">&#39;log_snr_min&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">),</span>
+                         <span class="p">(</span><span class="s">&#39;log_snr_max&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">),</span>
+                         <span class="p">(</span><span class="s">&#39;gamma&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">,</span> <span class="mi">2</span><span class="p">)])</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Posterior.pnames"><a class="viewcode-back" href="../index.html#posterior.Posterior.pnames">[docs]</a>    <span class="k">def</span> <span class="nf">pnames</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gives LaTeX names for the parameters.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="p">[</span><span class="s">r&#39;$R$&#39;</span><span class="p">,</span> <span class="s">r&#39;$R_b$&#39;</span><span class="p">,</span>
+                <span class="s">r&#39;$\mu_P$&#39;</span><span class="p">,</span> <span class="s">r&#39;$\mu_R$&#39;</span><span class="p">,</span>
+                <span class="s">r&#39;$\sigma_1$&#39;</span><span class="p">,</span> <span class="s">r&#39;$\sigma_2$&#39;</span><span class="p">,</span>
+                <span class="s">r&#39;$\theta$&#39;</span><span class="p">,</span>
+                <span class="s">r&#39;$\log\left(\rho_\mathrm{min}\right)$&#39;</span><span class="p">,</span>
+                <span class="s">r&#39;$\log\left(\rho_\mathrm{max}\right)$&#39;</span><span class="p">,</span>
+                <span class="s">r&#39;$\gamma_P$&#39;</span><span class="p">,</span> <span class="s">r&#39;$\gamma_R$&#39;</span><span class="p">]</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Posterior.nparams"><a class="viewcode-back" href="../index.html#posterior.Posterior.nparams">[docs]</a>    <span class="k">def</span> <span class="nf">nparams</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The number of parameters.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="mi">11</span>
+</div>
+<div class="viewcode-block" id="Posterior.to_params"><a class="viewcode-back" href="../index.html#posterior.Posterior.to_params">[docs]</a>    <span class="k">def</span> <span class="nf">to_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Converts the array ``p`` to a named-array representing parameters.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">p</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Posterior.covariance_matrix"><a class="viewcode-back" href="../index.html#posterior.Posterior.covariance_matrix">[docs]</a>    <span class="k">def</span> <span class="nf">covariance_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">inv</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the covariance matrix (or inverse, if ``inv=True``)</span>
+<span class="sd">        corresponding to the parameters ``p``.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_params</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">inv</span><span class="p">:</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="mf">1.0</span><span class="o">/</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s">&#39;sigma&#39;</span><span class="p">]</span><span class="o">*</span><span class="n">p</span><span class="p">[</span><span class="s">&#39;sigma&#39;</span><span class="p">]))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s">&#39;sigma&#39;</span><span class="p">]</span><span class="o">*</span><span class="n">p</span><span class="p">[</span><span class="s">&#39;sigma&#39;</span><span class="p">])</span>
+
+        <span class="n">ct</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s">&#39;theta&#39;</span><span class="p">])</span>
+        <span class="n">st</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s">&#39;theta&#39;</span><span class="p">])</span>
+
+        <span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">ct</span><span class="p">,</span> <span class="o">-</span><span class="n">st</span><span class="p">],</span> <span class="p">[</span><span class="n">st</span><span class="p">,</span> <span class="n">ct</span><span class="p">]])</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="Posterior.foreground_density"><a class="viewcode-back" href="../index.html#posterior.Posterior.foreground_density">[docs]</a>    <span class="k">def</span> <span class="nf">foreground_density</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">ps</span><span class="p">,</span> <span class="n">rs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the true foreground density for the given parameters and</span>
+<span class="sd">        planet periods and radii (in years and Earth radii, respectively).</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_params</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+
+        <span class="n">pts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">((</span><span class="n">ps</span><span class="p">,</span> <span class="n">rs</span><span class="p">)))</span>
+
+        <span class="n">cm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">covariance_matrix</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">inv</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+        <span class="n">xs</span> <span class="o">=</span> <span class="n">pts</span> <span class="o">-</span> <span class="n">p</span><span class="p">[</span><span class="s">&#39;mu&#39;</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="mf">1.0</span><span class="o">/</span><span class="p">(</span><span class="mf">2.0</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s">&#39;sigma&#39;</span><span class="p">]))</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">xs</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">cm</span><span class="p">,</span> <span class="n">xs</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="Posterior.background_density"><a class="viewcode-back" href="../index.html#posterior.Posterior.background_density">[docs]</a>    <span class="k">def</span> <span class="nf">background_density</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">ps</span><span class="p">,</span> <span class="n">rs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the background density at the given points in the</span>
+<span class="sd">        period-radius plane.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_params</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+
+        <span class="n">ps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">ps</span><span class="p">)</span>
+        <span class="n">rs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">rs</span><span class="p">)</span>
+
+        <span class="n">pts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">((</span><span class="n">ps</span><span class="p">,</span> <span class="n">rs</span><span class="p">)))</span>
+            
+        <span class="n">center</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lower_left</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper_right</span><span class="p">)</span>
+        <span class="n">dx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper_right</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower_left</span>
+        <span class="n">V</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">dx</span><span class="p">)</span>
+        
+        <span class="n">rhos</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="n">V</span><span class="o">*</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s">&#39;gamma&#39;</span><span class="p">],</span> <span class="p">(</span><span class="n">pts</span> <span class="o">-</span> <span class="n">center</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
+
+        <span class="n">sel</span> <span class="o">=</span> <span class="p">(</span><span class="n">pts</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower_left</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">pts</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper_right</span><span class="p">)</span>
+        <span class="n">sel</span> <span class="o">=</span> <span class="n">sel</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">|</span> <span class="n">sel</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">rhos</span><span class="p">[</span><span class="n">sel</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">return</span> <span class="n">rhos</span>
+</div>
+<div class="viewcode-block" id="Posterior.log_snr"><a class="viewcode-back" href="../index.html#posterior.Posterior.log_snr">[docs]</a>    <span class="k">def</span> <span class="nf">log_snr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ps</span><span class="p">,</span> <span class="n">rs</span><span class="p">,</span> <span class="n">snr0s</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the log of the SNR for the given periods and radii around</span>
+<span class="sd">        stars with the given SNR0s.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="mf">2.0</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">rs</span><span class="p">)</span> <span class="o">-</span> <span class="mf">1.0</span><span class="o">/</span><span class="mf">3.0</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">ps</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">snr0s</span><span class="p">)</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Posterior.transit_selection_factor"><a class="viewcode-back" href="../index.html#posterior.Posterior.transit_selection_factor">[docs]</a>    <span class="k">def</span> <span class="nf">transit_selection_factor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Probability of transit in a 1yr orbit about the sun.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="mf">0.001603891301</span> <span class="c"># Probability of detecting in yr orbit</span>
+                              <span class="c"># around sun.</span>
+</div>
+<div class="viewcode-block" id="Posterior.ptransit"><a class="viewcode-back" href="../index.html#posterior.Posterior.ptransit">[docs]</a>    <span class="k">def</span> <span class="nf">ptransit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ps</span><span class="p">,</span> <span class="n">ms</span><span class="p">,</span> <span class="n">rs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the probability of a transit at the given periods around</span>
+<span class="sd">        stars of the given masses and radii.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">transit_selection_factor</span><span class="o">*</span><span class="n">rs</span><span class="o">/</span><span class="p">(</span><span class="n">ms</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">ps</span><span class="p">))</span><span class="o">**</span><span class="p">(</span><span class="mf">1.0</span><span class="o">/</span><span class="mf">3.0</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Posterior.pdetect"><a class="viewcode-back" href="../index.html#posterior.Posterior.pdetect">[docs]</a>    <span class="k">def</span> <span class="nf">pdetect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">ps</span><span class="p">,</span> <span class="n">rs</span><span class="p">,</span> <span class="n">snr0s</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the detection probability assuming that a planet transits</span>
+<span class="sd">        given parameters ``p``, periods ``ps``, planetary radii</span>
+<span class="sd">        ``rs``, and stellar SNRs ``snr0s``.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_params</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+
+        <span class="n">log_snrs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_snr</span><span class="p">(</span><span class="n">ps</span><span class="p">,</span> <span class="n">rs</span><span class="p">,</span> <span class="n">snr0s</span><span class="p">)</span>
+        <span class="n">log_snrs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">log_snrs</span><span class="p">)</span>
+
+        <span class="n">pdets</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">log_snrs</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+        <span class="n">sel</span> <span class="o">=</span> <span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s">&#39;log_snr_min&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">log_snrs</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">log_snrs</span> <span class="o">&lt;=</span> <span class="n">p</span><span class="p">[</span><span class="s">&#39;log_snr_max&#39;</span><span class="p">])</span>
+        <span class="n">pdets</span><span class="p">[</span><span class="n">sel</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">log_snrs</span><span class="p">[</span><span class="n">sel</span><span class="p">]</span><span class="o">-</span><span class="n">p</span><span class="p">[</span><span class="s">&#39;log_snr_min&#39;</span><span class="p">])</span><span class="o">/</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s">&#39;log_snr_max&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">p</span><span class="p">[</span><span class="s">&#39;log_snr_min&#39;</span><span class="p">])</span>
+
+        <span class="n">sel</span> <span class="o">=</span> <span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s">&#39;log_snr_max&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">log_snrs</span><span class="p">)</span>
+        <span class="n">pdets</span><span class="p">[</span><span class="n">sel</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+        <span class="k">return</span> <span class="n">pdets</span>
+</div>
+<div class="viewcode-block" id="Posterior.gaussian_selection_integral"><a class="viewcode-back" href="../index.html#posterior.Posterior.gaussian_selection_integral">[docs]</a>    <span class="k">def</span> <span class="nf">gaussian_selection_integral</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot;Evaluates </span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">          \int_{x_\mathrm{min}}^{x_\mathrm{max}} dx\, \phi(x) \frac{x-x_\mathrm{min}}{x_\mathrm{max}-x_\mathrm{min}} + \int_{x_\mathrm{max}}^\infty dx \, \phi(x)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">dx</span> <span class="o">=</span> <span class="n">xmax</span> <span class="o">-</span> <span class="n">xmin</span>
+        <span class="n">edenom</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)</span><span class="o">*</span><span class="n">sigma</span>
+
+        <span class="n">mu_term</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">mu</span><span class="o">*</span><span class="p">(</span><span class="n">ss</span><span class="o">.</span><span class="n">erf</span><span class="p">((</span><span class="n">mu</span><span class="o">-</span><span class="n">xmin</span><span class="p">)</span><span class="o">/</span><span class="n">edenom</span><span class="p">)</span> <span class="o">-</span> <span class="n">ss</span><span class="o">.</span><span class="n">erf</span><span class="p">((</span><span class="n">mu</span><span class="o">-</span><span class="n">xmax</span><span class="p">)</span><span class="o">/</span><span class="n">edenom</span><span class="p">))</span>
+        <span class="n">xterm</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">xmax</span><span class="o">*</span><span class="n">ss</span><span class="o">.</span><span class="n">erf</span><span class="p">((</span><span class="n">mu</span><span class="o">-</span><span class="n">xmax</span><span class="p">)</span><span class="o">/</span><span class="n">edenom</span><span class="p">)</span> <span class="o">-</span> <span class="n">xmin</span><span class="o">*</span><span class="n">ss</span><span class="o">.</span><span class="n">erf</span><span class="p">((</span><span class="n">mu</span><span class="o">-</span><span class="n">xmin</span><span class="p">)</span><span class="o">/</span><span class="n">edenom</span><span class="p">))</span>
+        <span class="n">sigma_term</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.0</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span><span class="o">*</span><span class="n">sigma</span><span class="o">*</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">((</span><span class="n">mu</span><span class="o">-</span><span class="n">xmin</span><span class="p">)</span><span class="o">/</span><span class="n">sigma</span><span class="p">))</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">((</span><span class="n">mu</span><span class="o">-</span><span class="n">xmax</span><span class="p">)</span><span class="o">/</span><span class="n">sigma</span><span class="p">)))</span>
+
+        <span class="k">return</span> <span class="mf">1.0</span><span class="o">/</span><span class="n">dx</span><span class="o">*</span><span class="p">(</span><span class="n">mu_term</span> <span class="o">+</span> <span class="n">xterm</span> <span class="o">+</span> <span class="n">sigma_term</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.5</span>
+</div>
+<div class="viewcode-block" id="Posterior.alpha"><a class="viewcode-back" href="../index.html#posterior.Posterior.alpha">[docs]</a>    <span class="k">def</span> <span class="nf">alpha</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">ms</span><span class="p">,</span> <span class="n">rs</span><span class="p">,</span> <span class="n">snr0s</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the average probability over the planetary period-radius</span>
+<span class="sd">        distribution of detecting a planet (transit probability times</span>
+<span class="sd">        detection probability) about stars with the given masses,</span>
+<span class="sd">        radii, and SNRs.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_params</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+
+        <span class="n">mu</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="s">&#39;mu&#39;</span><span class="p">]</span>
+        <span class="n">cm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">covariance_matrix</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="n">gm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">covariance_matrix</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">inv</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+        <span class="n">gm_det</span> <span class="o">=</span> <span class="n">gm</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">gm</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">gm</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">gm</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">mu_new</span> <span class="o">=</span> <span class="n">mu</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">2.0</span><span class="o">/</span><span class="mf">3.0</span><span class="o">*</span><span class="n">gm</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="n">gm_det</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.0</span><span class="o">/</span><span class="mf">3.0</span><span class="o">*</span><span class="n">gm</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="n">gm_det</span><span class="p">])</span>
+
+        <span class="n">lognorm_norm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">2.0</span><span class="o">/</span><span class="mf">3.0</span><span class="o">*</span><span class="n">mu</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mf">2.0</span><span class="o">/</span><span class="mf">9.0</span><span class="o">*</span><span class="n">gm</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="n">gm_det</span><span class="p">)</span>
+        <span class="n">geom_factor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transit_selection_factor</span><span class="o">*</span><span class="n">rs</span><span class="o">/</span><span class="n">ms</span><span class="o">**</span><span class="p">(</span><span class="mf">1.0</span><span class="o">/</span><span class="mf">3.0</span><span class="p">)</span>
+
+        <span class="n">log_snr_mean</span> <span class="o">=</span> <span class="mf">2.0</span><span class="o">*</span><span class="n">mu_new</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mf">1.0</span><span class="o">/</span><span class="mf">3.0</span><span class="o">*</span><span class="n">mu_new</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">snr0s</span><span class="p">)</span>
+        <span class="n">log_snr_sigma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">4.0</span><span class="o">*</span><span class="n">cm</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mf">4.0</span><span class="o">/</span><span class="mf">3.0</span><span class="o">*</span><span class="n">cm</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mf">1.0</span><span class="o">/</span><span class="mf">9.0</span><span class="o">*</span><span class="n">cm</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">lognorm_norm</span><span class="o">*</span><span class="n">geom_factor</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">gaussian_selection_integral</span><span class="p">(</span><span class="n">log_snr_mean</span><span class="p">,</span> <span class="n">log_snr_sigma</span><span class="p">,</span> <span class="n">p</span><span class="p">[</span><span class="s">&#39;log_snr_min&#39;</span><span class="p">],</span> <span class="n">p</span><span class="p">[</span><span class="s">&#39;log_snr_max&#39;</span><span class="p">])</span>
+</div>
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the posterior evaluated at ``p``.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_params</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+
+        <span class="n">dx</span><span class="p">,</span> <span class="n">dy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper_right</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower_left</span>
+        <span class="n">gx</span><span class="p">,</span> <span class="n">gy</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="s">&#39;gamma&#39;</span><span class="p">]</span>
+
+        <span class="c"># Priors bounds</span>
+        <span class="k">if</span> <span class="n">p</span><span class="p">[</span><span class="s">&#39;R&#39;</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">p</span><span class="p">[</span><span class="s">&#39;Rb&#39;</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">NINF</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s">&#39;mu&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pts</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span> <span class="ow">or</span> \
+           <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s">&#39;mu&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pts</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">NINF</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s">&#39;sigma&#39;</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">NINF</span>
+        <span class="k">if</span> <span class="n">p</span><span class="p">[</span><span class="s">&#39;theta&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">p</span><span class="p">[</span><span class="s">&#39;theta&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mf">2.0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">NINF</span>
+        <span class="k">if</span> <span class="n">p</span><span class="p">[</span><span class="s">&#39;log_snr_max&#39;</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">p</span><span class="p">[</span><span class="s">&#39;log_snr_min&#39;</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">NINF</span>
+        <span class="k">if</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">dx</span><span class="o">*</span><span class="n">gx</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">dy</span><span class="o">*</span><span class="n">gy</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">NINF</span>
+
+        <span class="n">alphas</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">systems</span><span class="p">[</span><span class="s">&#39;Mass&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">systems</span><span class="p">[</span><span class="s">&#39;Radius&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">systems</span><span class="p">[</span><span class="s">&#39;SNR0&#39;</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">alphas</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">NINF</span>
+
+        <span class="n">Rtotal</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="s">&#39;R&#39;</span><span class="p">]</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">alphas</span><span class="p">)</span> <span class="o">+</span> <span class="n">p</span><span class="p">[</span><span class="s">&#39;Rb&#39;</span><span class="p">]</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">systems</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">rhos</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="s">&#39;R&#39;</span><span class="p">]</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">pdetect</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">candidates</span><span class="p">[</span><span class="s">&#39;Period&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">candidates</span><span class="p">[</span><span class="s">&#39;Radius&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">candidates</span><span class="p">[</span><span class="s">&#39;SNR0&#39;</span><span class="p">])</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">ptransit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">candidates</span><span class="p">[</span><span class="s">&#39;Period&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">candidates</span><span class="p">[</span><span class="s">&#39;Stellar_Mass&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">candidates</span><span class="p">[</span><span class="s">&#39;Stellar_Radius&#39;</span><span class="p">])</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">foreground_density</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">candidates</span><span class="p">[</span><span class="s">&#39;Period&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">candidates</span><span class="p">[</span><span class="s">&#39;Radius&#39;</span><span class="p">])</span> <span class="o">+</span> <span class="n">p</span><span class="p">[</span><span class="s">&#39;Rb&#39;</span><span class="p">]</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">background_density</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">candidates</span><span class="p">[</span><span class="s">&#39;Period&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">candidates</span><span class="p">[</span><span class="s">&#39;Radius&#39;</span><span class="p">])</span>
+
+        <span class="n">ll</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">rhos</span><span class="p">))</span> <span class="o">-</span> <span class="n">Rtotal</span>
+
+        <span class="n">lp</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s">&#39;sigma&#39;</span><span class="p">]))</span> <span class="o">-</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s">&#39;log_snr_min&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">3.0</span><span class="p">))</span> <span class="o">-</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s">&#39;log_snr_max&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">11.0</span><span class="p">))</span> <span class="o">-</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s">&#39;R&#39;</span><span class="p">]</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">alphas</span><span class="p">))</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="s">&#39;Rb&#39;</span><span class="p">]))</span>
+
+        <span class="k">return</span> <span class="n">ll</span> <span class="o">+</span> <span class="n">lp</span>
+
+<div class="viewcode-block" id="Posterior.draw_background"><a class="viewcode-back" href="../index.html#posterior.Posterior.draw_background">[docs]</a>    <span class="k">def</span> <span class="nf">draw_background</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Draw ``N`` systems from the background distribution specified by</span>
+<span class="sd">        parameters ``p``.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_params</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+
+        <span class="n">dx</span><span class="p">,</span> <span class="n">dy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper_right</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower_left</span>
+        <span class="n">gx</span><span class="p">,</span> <span class="n">gy</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="s">&#39;gamma&#39;</span><span class="p">]</span>
+        <span class="n">V</span> <span class="o">=</span> <span class="n">dx</span><span class="o">*</span><span class="n">dy</span>
+
+        <span class="n">pmax</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="n">V</span><span class="o">*</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">dx</span><span class="o">*</span><span class="n">gx</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">dy</span><span class="o">*</span><span class="n">gy</span><span class="p">))</span>
+
+        <span class="n">pts</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">pts</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">N</span><span class="p">:</span>
+            <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower_left</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">dx</span><span class="o">*</span><span class="n">x</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower_left</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">dy</span><span class="o">*</span><span class="n">y</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">z</span><span class="o">*</span><span class="n">pmax</span>
+
+            <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">z</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">background_density</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+                <span class="n">pts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">]))</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">pts</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Posterior.draw"><a class="viewcode-back" href="../index.html#posterior.Posterior.draw">[docs]</a>    <span class="k">def</span> <span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p0</span><span class="p">,</span> <span class="n">ids</span><span class="p">,</span> <span class="n">masses</span><span class="p">,</span> <span class="n">radii</span><span class="p">,</span> <span class="n">snr0s</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Draw planets and background &quot;detections&quot; around the stars with the</span>
+<span class="sd">        given masses, radii, and SNRs as described by the model</span>
+<span class="sd">        parameters ``p0``.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">p0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_params</span><span class="p">(</span><span class="n">p0</span><span class="p">)</span>
+
+        <span class="n">fs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">bs</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">mu</span> <span class="o">=</span> <span class="n">p0</span><span class="p">[</span><span class="s">&#39;mu&#39;</span><span class="p">]</span>
+        <span class="n">cm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">covariance_matrix</span><span class="p">(</span><span class="n">p0</span><span class="p">)</span>
+
+        <span class="c"># Draw foreground events</span>
+        <span class="k">for</span> <span class="nb">id</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">ids</span><span class="p">,</span> <span class="n">masses</span><span class="p">,</span> <span class="n">radii</span><span class="p">,</span> <span class="n">snr0s</span><span class="p">):</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">poisson</span><span class="p">(</span><span class="n">p0</span><span class="p">[</span><span class="s">&#39;R&#39;</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">pts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">multivariate_normal</span><span class="p">(</span><span class="n">mean</span><span class="o">=</span><span class="n">mu</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="n">cm</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+
+                <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pts</span><span class="p">:</span>
+                    <span class="n">P</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                    <span class="n">R</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+                    <span class="n">pselect</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pdetect</span><span class="p">(</span><span class="n">p0</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">ptransit</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">pselect</span><span class="p">:</span>
+                        <span class="n">fs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="nb">int</span><span class="p">(</span><span class="nb">id</span><span class="p">),</span> <span class="n">P</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">s</span><span class="p">))</span>
+
+            <span class="n">n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">poisson</span><span class="p">(</span><span class="n">p0</span><span class="p">[</span><span class="s">&#39;Rb&#39;</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">ps_rs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">draw_background</span><span class="p">(</span><span class="n">p0</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+
+                <span class="k">for</span> <span class="n">P</span><span class="p">,</span> <span class="n">R</span> <span class="ow">in</span> <span class="n">ps_rs</span><span class="p">:</span>
+                    <span class="n">bs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="nb">int</span><span class="p">(</span><span class="nb">id</span><span class="p">),</span> <span class="n">P</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">s</span><span class="p">))</span>
+
+        <span class="n">candidates</span> <span class="o">=</span> <span class="n">fs</span> <span class="o">+</span> <span class="n">bs</span>
+                    
+        <span class="n">candidates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">candidates</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">([(</span><span class="s">&#39;Kepler_ID&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">),</span>
+                                                          <span class="p">(</span><span class="s">&#39;Period&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">),</span>
+                                                          <span class="p">(</span><span class="s">&#39;Radius&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">),</span>
+                                                          <span class="p">(</span><span class="s">&#39;Stellar_Radius&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">),</span>
+                                                          <span class="p">(</span><span class="s">&#39;Stellar_Mass&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">),</span>
+                                                          <span class="p">(</span><span class="s">&#39;SNR0&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">)]))</span>
+
+        <span class="k">return</span> <span class="n">candidates</span>
+</div>
+<div class="viewcode-block" id="Posterior.gradient"><a class="viewcode-back" href="../index.html#posterior.Posterior.gradient">[docs]</a>    <span class="k">def</span> <span class="nf">gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a numerical approximation to the gradient of the posterior</span>
+<span class="sd">        at the point ``p``.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">g</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nparams</span><span class="p">):</span>
+            <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+                <span class="n">pc</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                <span class="n">pc</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__call__</span><span class="p">(</span><span class="n">pc</span><span class="p">)</span>
+            <span class="n">g</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sm</span><span class="o">.</span><span class="n">derivative</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">p</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">dx</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">g</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">Kepler Planet Distribution Function 0.1 documentation</a> &raquo;</li>
+          <li><a href="index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Will M. Farr.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>
