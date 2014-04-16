@@ -189,7 +189,7 @@ def save_stellar_properties(cdpp_map, snr0_map, file):
 
     """
 
-    file.write('Kepler ID\tRadius\tMass\tSNR0\n')
+    file.write('Kepler_ID\tRadius\tMass\tSNR0\n')
 
     for id, qitem in cdpp_map.items():
         file.write('{0:d}\t{1:g}\t{2:g}\t{3:g}\n'.format(id, qitem['rad'][0], logg_to_mass(qitem['logg'][0], qitem['rad'][0]), snr0_map[id]))
@@ -207,7 +207,7 @@ def save_candidate_properties(cands, snr0_map, cdpp_map, file):
 
     """
 
-    file.write('Kepler ID\tPeriod\tRadius\tStellar Radius\tStellar Mass\tSNR0\n')
+    file.write('Kepler_ID\tPeriod\tRadius\tStellar_Radius\tStellar_Mass\tSNR0\n')
 
     for cand in cands:
         if cdpp_map.has_key(cand['kepid']) and snr0_map.has_key(cand['kepid']):
@@ -219,3 +219,10 @@ def save_candidate_properties(cands, snr0_map, cdpp_map, file):
             snr0 = snr0_map[id]
 
             file.write('{0:d}\t{1:g}\t{2:g}\t{3:g}\t{4:g}\t{5:g}\n'.format(id, p, r, rs, m, snr0))
+
+def load_candidate_properties(file):
+    return np.genfromtxt(file, names=True, dtype=[np.int, np.float, np.float,
+                                                  np.float, np.float, np.float])
+
+def load_system_properties(file):
+    return np.genfromtxt(file, names=True, dtype=[np.int, np.float, np.float, np.float])

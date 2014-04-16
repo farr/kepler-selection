@@ -2,6 +2,7 @@
 
 import argparse
 import bz2
+import data_processing as dp
 import emcee
 import numpy as np
 import os
@@ -28,13 +29,8 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    candidates = np.genfromtxt(args.candidates,
-                               names=True,
-                               dtype=[np.int, np.float, np.float,
-                                      np.float, np.float, np.float])
-    systems = np.genfromtxt(args.systems,
-                            names=True,
-                            dtype=[np.int, np.float, np.float, np.float])
+    candidates = dp.load_candidate_properties(args.candidates)
+    systems = dp.load_system_properties(args.systems)
 
     logpost = posterior.Posterior(candidates, systems)
 
