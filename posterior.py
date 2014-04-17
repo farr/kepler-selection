@@ -74,7 +74,8 @@ class Posterior(object):
                          ('theta', np.float),
                          ('log_snr_min', np.float),
                          ('log_snr_max', np.float),
-                         ('gamma', np.float, 2)])
+                         ('gamma', np.float, 2),
+                         ('Pmin', np.float)])
 
     @property
     def pnames(self):
@@ -88,7 +89,7 @@ class Posterior(object):
                 r'$\theta$',
                 r'$\log\left(\rho_\mathrm{min}\right)$',
                 r'$\log\left(\rho_\mathrm{max}\right)$',
-                r'$\gamma_P$', r'$\gamma_R$']
+                r'$\gamma_P$', r'$\gamma_R$', r'$P_\mathrm{min}$']
 
     @property
     def nparams(self):
@@ -147,14 +148,17 @@ class Posterior(object):
         rs = np.atleast_1d(rs)
 
         pts = np.log(np.column_stack((ps, rs)))
-            
-        center = 0.5*(self.lower_left + self.upper_right)
-        dx = self.upper_right - self.lower_left
+
+        lower_left = self.lower_left.copy()
+        lower_left[0] = np.log(p['Pmin'])
+        
+        center = 0.5*(lower_left + self.upper_right)
+        dx = self.upper_right - lower_left
         V = np.prod(dx)
         
         rhos = 1.0/V*(1.0 + np.dot(p['gamma'], (pts - center).T))
 
-        sel = (pts < self.lower_left) | (pts > self.upper_right)
+        sel = (pts < lower_left) | (pts > self.upper_right)
         sel = sel[:,0] | sel[:,1]
 
         rhos[sel] = 0.0
@@ -254,7 +258,10 @@ class Posterior(object):
 
         p = self.to_params(p)
 
-        dx, dy = self.upper_right - self.lower_left
+        lower_left = self.lower_left.copy()
+        lower_left[0] = np.log(p['Pmin'])
+
+        dx, dy = self.upper_right - lower_left
         gx, gy = p['gamma']
 
         # Priors bounds
@@ -270,6 +277,8 @@ class Posterior(object):
         if p['log_snr_max'] <= p['log_snr_min']:
             return np.NINF
         if 1.0 - 0.5*np.abs(dx*gx) - 0.5*np.abs(dy*gy) < 0:
+            return np.NINF
+        if np.log(p['Pmin']) > self.upper_right[0]:
             return np.NINF
 
         alphas = self.alpha(p, self.systems['Mass'], self.systems['Radius'], self.systems['SNR0'])
@@ -294,7 +303,10 @@ class Posterior(object):
 
         p = self.to_params(p)
 
-        dx, dy = self.upper_right - self.lower_left
+        lower_left = self.lower_left.copy()
+        lower_left[0] = np.log(p['Pmin'])
+
+        dx, dy = self.upper_right - lower_left
         gx, gy = p['gamma']
         V = dx*dy
 
@@ -304,8 +316,8 @@ class Posterior(object):
         while len(pts) < N:
             x,y,z = np.random.random(size=3)
 
-            x = self.lower_left[0] + dx*x
-            y = self.lower_left[1] + dy*y
+            x = lower_left[0] + dx*x
+            y = lower_left[1] + dy*y
             z = z*pmax
 
             x = np.exp(x)
