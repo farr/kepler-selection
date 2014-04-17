@@ -94,7 +94,7 @@ class Posterior(object):
     @property
     def nparams(self):
         """The number of parameters."""
-        return 11
+        return 12
 
     def to_params(self, p):
         """Converts the array ``p`` to a named-array representing parameters.
