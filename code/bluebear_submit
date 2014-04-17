@@ -8,4 +8,4 @@
 
 module unload apps/openmpi
 
-python run.py --candidates ../Kepler/candidates.dat.bz2 --systems ../Kepler/systems.dat.bz2 --outdir ../Kepler --threads 15 --walkers 512
+python run.py --candidates ../../Kepler/candidates.dat.bz2 --systems ../../Kepler/systems.dat.bz2 --outdir ../../Kepler --threads 15 --walkers 512
