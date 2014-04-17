@@ -1,0 +1,90 @@
+\documentclass{nature}
+
+\usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{xcolor}
+
+\bibliographystyle{naturemag}
+
+\newcommand{\etaearth}{\eta_\oplus}
+\newcommand{\Rpeak}{R_\mathrm{peak}}
+\newcommand{\REarth}{R_\oplus}
+
+\newcommand{\email}[1]{\href{mailto:#1}{\nolinkurl{#1}}}
+
+\newcommand{\Will}[1]{\textcolor{cyan}{Will: #1}}
+
+\newcommand{\apj}{The Astrophysical Journal}
+\newcommand{\apjs}{The Astrophysical Journal Supplement}
+
+\begin{document}
+\title{The Occurrence of Earth-Like Planets Around Other Stars}
+
+\author{Will M. Farr$^{1,2}$, Chris Aldridge$^{1,3}$, Kirsty Stroud$^{1,4}$ \& Ilya Mandel$^{1,5}$}
+
+\maketitle
+
+\begin{affiliations}
+\item School of Physics and Astronomy, Univeristy of Birmingham, Birmingham, B15 2TT, United Kingdom
+\item \email{w.farr@bham.ac.uk}
+\item \email{CXA064@bham.ac.uk}
+\item \email{KLS081@bham.ac.uk}
+\item \email{ilyamandel@chgk.info}
+\end{affiliations}
+
+\begin{abstract}
+  The quantity $\etaearth$, the number density of planets per star per
+  logarithmic planetary radius per logarithmic orbital period,
+  describes the occurrence of Earth-like extrasolar planets.
+  Measurement of $\etaearth$ is complicated by the difficulty of
+  detecting Earth-like planets in Earth-like orbits about Sun-like
+  stars; previous estimates place $1\% \lesssim \etaearth \lesssim
+  34\%$, relying on extrapolations from regions in period-radius space
+  where detection is easier and the sample of observed planets is
+  complete\cite{2011ApJ...738...81W,2011ApJ...738..151C,2012ApJ...745...20T},
+  or modelling the selection effects carefully but using simpler
+  models of the period-radius distribution of
+  exoplanets\cite{2013ApJ...778...53D}, possibly using a low-noise
+  subset of the available data\cite{2013PNAS..11019273P}.
+  Additionally, no previous estimates account for contamination from
+  false-positive planetary identifications.  Here we present
+  constraints on $\etaearth$ from a parameterised forward model of the
+  (correlated) period-radius distribution and the observational
+  selection function in the most recent (Q17) data release from the
+  Kepler
+  satellite\cite{2010Sci...327..977B,2011ApJ...736...19B,2013ApJS..204...24B},
+  including an empirical parameterisation for the distribution of
+  false-positives in the data set.  We find $\etaearth =
+  4.1^{+2.3}_{-1.7}\%$ (90\% CL).  Additionally, we find that each
+  star hosts $4.04_{-0.68}^{+0.85}$ planets with $P \lesssim 3
+  \mathrm{yr}$ and $R \gtrsim 0.2 \REarth$, that the peak of the
+  planet-radius distribution lies at $\Rpeak = 1.19_{-0.18}^{+0.17}
+  \REarth$.  \Will{More science stuff here.}
+\end{abstract}
+
+\bibliography{kepler-selection}
+
+\begin{addendum}
+\item WMF and IM are supported by a STFC consolidated grant number
+  NNNN.  Computations in this work were performed on the University of
+  Birmingham's BlueBEAR cluster.  Some/all of the data presented in
+  this paper were obtained from the Mikulski Archive for Space
+  Telescopes (MAST). STScI is operated by the Association of
+  Universities for Research in Astronomy, Inc., under NASA contract
+  NAS5-26555. Support for MAST for non-HST data is provided by the
+  NASA Office of Space Science via grant NNX13AC07G and by other
+  grants and contracts.  This paper includes data collected by the
+  Kepler mission. Funding for the Kepler mission is provided by the
+  NASA Science Mission directorate.
+\item [Author Contributions] All authors assisted in the computational
+  modelling, discussed the results, and edited the manuscript.
+\item [Reprints] Reprints and permissions information is available at
+  \url{www.nature.com/reprints}.
+\item[Competing Interests] The authors declare that they have no
+  competing financial interests.
+\item[Correspondence] Correspondence and requests for materials should
+  be addressed to W.M.F.\ (email: \email{w.farr@bham.ac.uk}).
+\end{addendum}
+
+\end{document}

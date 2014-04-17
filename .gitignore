@@ -2,3 +2,9 @@
 *.bz2
 *~
 *.o*
+*.aux
+*.bbl
+*.blg
+*.log
+*.pdf
+*Notes.bib
