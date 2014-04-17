@@ -332,35 +332,40 @@ class Posterior(object):
         cm = self.covariance_matrix(p0)
 
         # Draw foreground events
-        for id, m, r, s in zip(ids, masses, radii, snr0s):
-            n = np.random.poisson(p0['R'])
-            if n > 0:
-                pts = np.random.multivariate_normal(mean=mu, cov=cm, size=n)
+        n = np.random.poisson(p0['R']*ids.shape[0])
+        pts = np.random.multivariate_normal(mean=mu, cov=cm, size=n)
+        inds = np.random.randint(ids.shape[0], size=n)
+        PS = np.exp(pts[:,0])
+        RS = np.exp(pts[:,1])
+        psel = self.pdetect(p0, PS, RS, snr0s[inds])*self.ptransit(PS, masses[inds], radii[inds])
+        sel = np.random.random(size=n) < psel
 
-                for p in pts:
-                    P = np.exp(p[0])
-                    R = np.exp(p[1])
+        fps = PS[sel]
+        frs = RS[sel]
+        fids = ids[inds][sel]
+        fmasses = masses[inds][sel]
+        fradii = radii[inds][sel]
+        fsnr0s = snr0s[inds][sel]
+        
+        # Draw background events
+        n = np.random.poisson(p0['Rb']*ids.shape[0])
+        ps_rs = self.draw_background(p0, n)
+        inds = np.random.randint(ids.shape[0], size=n)
 
-                    pselect = self.pdetect(p0, P, R, s)*self.ptransit(P, m, r)
+        syss = []
 
-                    if np.random.random() < pselect:
-                        fs.append((int(id), P, R, r, m, s))
+        for fp, fr, fid, fm, frad, fs in zip(fps, frs, fids, fmasses, fradii, fsnr0s):
+            syss.append((int(fid), fp, fr, frad, fm, fs))
 
-            n = np.random.poisson(p0['Rb'])
-            if n > 0:
-                ps_rs = self.draw_background(p0, n)
+        for bp, br, bi in zip(ps_rs[:,0], ps_rs[:,1], inds):
+            syss.append((int(ids[bi]), bp, br, radii[bi], masses[bi], snr0s[bi]))
 
-                for P, R in ps_rs:
-                    bs.append((int(id), P, R, r, m, s))
-
-        candidates = fs + bs
-                    
-        candidates = np.array(candidates, dtype=np.dtype([('Kepler_ID', np.int),
-                                                          ('Period', np.float),
-                                                          ('Radius', np.float),
-                                                          ('Stellar_Radius', np.float),
-                                                          ('Stellar_Mass', np.float),
-                                                          ('SNR0', np.float)]))
+        candidates = np.array(syss, dtype=np.dtype([('Kepler_ID', np.int),
+                                                    ('Period', np.float),
+                                                    ('Radius', np.float),
+                                                    ('Stellar_Radius', np.float),
+                                                    ('Stellar_Mass', np.float),
+                                                    ('SNR0', np.float)]))
 
         return candidates
 
