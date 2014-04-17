@@ -83,7 +83,7 @@ class Posterior(object):
 
         """
 
-        return [r'$R$', r'$R_b$',
+        return [r'$R_\mathrm{pl}$', r'$R_b$',
                 r'$\mu_P$', r'$\mu_R$',
                 r'$\sigma_1$', r'$\sigma_2$',
                 r'$\theta$',
