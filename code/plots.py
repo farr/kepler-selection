@@ -26,6 +26,11 @@ def setup():
 
     pp.rcParams.update(params)
 
+def pcolormesh(x, y, z, *args, **kwargs):
+    z = 0.25*(z[:-1,:-1] + z[:-1, 1:] + z[1:,:-1] + z[1:,1:])
+
+    pp.pcolormesh(x, y, z, *args, **kwargs)
+
 def plot_error_ellipse(logpost, p):
     """Plots the location of the mean and the 1-sigma error ellipse in the
     P-R plane for the given params.
@@ -89,11 +94,11 @@ def plot_true_foreground_density(logpost, p):
                          np.exp(np.linspace(np.log(ymin), np.log(ymax), 250)))
     ZS = logpost.foreground_density(p, XS.flatten(), YS.flatten()).reshape((250, 250))
 
-    pp.pcolormesh(XS, YS, ZS)
+    pcolormesh(XS, YS, ZS)
     pp.xscale('log')
     pp.yscale('log')
 
-def compute_range(xs):
+def range(xs):
     """Returns ``(mean(xs), mean(xs)-x5, x95-mean(xs))`` where ``x5`` and
     ``x95`` are the 5-th and 95-th percentile of the ``xs``.
 
@@ -141,11 +146,7 @@ def correlation_coefficients(logpost, chain):
     return rs.reshape(chain.shape[:2])
 
 def plot_eta_earth_histogram(eta_earths, outdir=None):
-    tau = ac.autocorrelation_length_estimate(np.mean(eta_earths, axis=0))
-
-    thin_eta_earths = eta_earths[:, ::int(round(tau))]
-
-    pu.plot_histogram_posterior(thin_eta_earths.flatten(), normed=True, histtype='step', color='k')
+    pu.plot_histogram_posterior(eta_earths.flatten(), normed=True, histtype='step', color='k')
     pp.xlabel(r'$\eta_\oplus$')
     pp.ylabel(r'$p\left(\eta_\oplus\right)$')
 
@@ -156,19 +157,14 @@ def plot_eta_earth_histogram(eta_earths, outdir=None):
         pp.savefig(op.join(outdir, 'eta-earth.pdf'))
 
 def plot_foreground_distributions(logpost, chain, N=1000, outdir=None):
-    tau = np.max(ac.emcee_chain_autocorrelation_lengths(chain))
-
     fchain = chain.reshape((-1, chain.shape[2]))
-
-    step = int(round(float(fchain.shape[0])/N))
-    tfchain = fchain[::step,:]
 
     dNdR = 0
     dNdP = 0
     dNdPdR = 0
-    pfores = 0
+    pbacks = 0
 
-    p0 = logpost.to_params(tfchain[0,:])
+    p0 = logpost.to_params(fchain[0,:])
 
     cm = logpost.covariance_matrix(p0)
 
@@ -182,39 +178,41 @@ def plot_foreground_distributions(logpost, chain, N=1000, outdir=None):
     rmin = min(rmin, np.min(np.log(logpost.candidates['Radius'])))
     rmax = max(rmax, np.max(np.log(logpost.candidates['Radius'])))
 
-    ps = np.exp(np.linspace(pmin, pmax, 250))
-    rs = np.exp(np.linspace(rmin, rmax, 250))
+    ps = np.exp(np.linspace(pmin, pmax, 100))
+    rs = np.exp(np.linspace(rmin, rmax, 100))
 
     PS, RS = np.meshgrid(ps, rs)
 
-    for p in tfchain:
+    for p in fchain:
         cm = logpost.covariance_matrix(p)
         mu = logpost.to_params(p)['mu']
 
-        dNdR += p[0]*ss.norm.pdf(np.log(rs), loc=mu[1], scale=cm[1,1])
-        dNdP += p[0]*ss.norm.pdf(np.log(ps), loc=mu[0], scale=cm[0,0])
-        dNdPdR += p[0]*logpost.foreground_density(p, PS.flatten(), RS.flatten()).reshape((250, 250))
+        dNdR += p[0]*ss.norm.pdf(np.log(rs), loc=mu[1], scale=np.sqrt(cm[1,1]))
+        dNdP += p[0]*ss.norm.pdf(np.log(ps), loc=mu[0], scale=np.sqrt(cm[0,0]))
+        dNdPdR += p[0]*logpost.foreground_density(p, PS.flatten(), RS.flatten()).reshape((100, 100))
 
         rho_fore = p[0]*logpost.foreground_density(p, logpost.candidates['Period'],
                                                    logpost.candidates['Radius'])
         rho_back = p[1]*logpost.background_density(p, logpost.candidates['Period'],
                                                    logpost.candidates['Radius'])
 
-        pfores += rho_fore / (rho_fore + rho_back)
+        pbacks += rho_back / (rho_fore + rho_back)
 
-    dNdR /= tfchain.shape[0]
-    dNdP /= tfchain.shape[0]
-    dNdPdR /= tfchain.shape[0]
-    pfores /= tfchain.shape[0]
+    dNdR /= fchain.shape[0]
+    dNdP /= fchain.shape[0]
+    dNdPdR /= fchain.shape[0]
+    pbacks /= fchain.shape[0]
 
     pp.subplot(2,2,1)
     pp.plot(rs, dNdR, '-k')
+    pp.axis(xmin=rs[0], xmax=rs[-1])
     pp.xscale('log')
+    pp.yscale('log')
     pp.xlabel(r'$R$ ($R_\oplus$)')
-    pp.ylabel(r'$p(\ln R)$')
+    pp.ylabel(r'$dN/d\ln R$')
 
     pp.subplot(2,2,2)
-    pp.pcolormesh(PS, RS, dNdPdR)
+    pcolormesh(PS, RS, dNdPdR, norm=mc.LogNorm())
     pp.colorbar()
     pp.xlabel(r'$P$ ($\mathrm{yr}$)')
     pp.ylabel(r'$R$ ($R_\oplus$)')
@@ -223,7 +221,7 @@ def plot_foreground_distributions(logpost, chain, N=1000, outdir=None):
     pp.axis(xmin=ps[0], xmax=ps[-1], ymin=rs[0], ymax=rs[-1])
 
     pp.subplot(2,2,3)
-    pp.scatter(logpost.candidates['Period'], logpost.candidates['Radius'], c=pfores)
+    pp.scatter(logpost.candidates['Period'], logpost.candidates['Radius'], c=pbacks, norm=mc.LogNorm())
     pp.colorbar()
     pp.xscale('log')
     pp.yscale('log')
@@ -233,9 +231,11 @@ def plot_foreground_distributions(logpost, chain, N=1000, outdir=None):
 
     pp.subplot(2,2,4)
     pp.plot(ps, dNdP, '-k')
+    pp.axis(xmin=ps[0], xmax=ps[-1])
     pp.xscale('log')
+    pp.yscale('log')
     pp.xlabel(r'$P$ ($\mathrm{yr}$)')
-    pp.ylabel(r'$p(\ln P)$')
+    pp.ylabel(r'$dN/d\ln P$')
 
     if outdir is not None:
         pp.savefig(op.join(outdir, 'foreground-dist.pdf'))
@@ -268,12 +268,16 @@ def plot_selection(logpost, chain, Ndraw=100, outdir=None):
     pp.subplot(2,2,1)
     pu.plot_histogram_posterior(logpost.candidates['Radius'], color='k', normed=True, histtype='step', log=True)
     pu.plot_histogram_posterior(all_candidates['Radius'], color='b', normed=True, histtype='step', log=True)
+    pp.yscale('log')
+    pp.axis(xmin=min(np.min(candidates['Radius']), np.min(logpost.candidates['Radius'])),
+            xmax=max(np.max(candidates['Radius']), np.max(logpost.candidates['Radius'])),
+            ymin=1e-4)
     pp.xlabel(r'$R$ ($R_\oplus$)')
     pp.ylabel(r'$p(\ln R)$')
 
     pp.subplot(2,2,2)
-    pp.scatter(logpost.candidates['Period'], logpost.candidates['Radius'], color='k', alpha=0.1)
-    pp.scatter(candidates['Period'], candidates['Radius'], color='b', alpha=0.2)
+    pp.scatter(logpost.candidates['Period'], logpost.candidates['Radius'], color='k', alpha=0.05)
+    pp.scatter(candidates['Period'], candidates['Radius'], color='b', alpha=0.05)
     pp.axis(xmin=min(np.min(candidates['Period']), np.min(logpost.candidates['Period'])),
             xmax=max(np.max(candidates['Period']), np.max(logpost.candidates['Period'])),
             ymin=min(np.min(candidates['Radius']), np.min(logpost.candidates['Radius'])),
@@ -286,10 +290,10 @@ def plot_selection(logpost, chain, Ndraw=100, outdir=None):
     pp.subplot(2,2,3)
     pp.scatter(logpost.candidates['Period'], logpost.candidates['Radius'], c=psel,
                norm=mc.LogNorm())
-    pp.axis(xmin=np.min(logpost.candidates['Period']),
-            xmax=np.max(logpost.candidates['Period']),
-            ymin=np.min(logpost.candidates['Radius']),
-            ymax=np.max(logpost.candidates['Radius']))
+    pp.axis(xmin=min(np.min(candidates['Period']), np.min(logpost.candidates['Period'])),
+            xmax=max(np.max(candidates['Period']), np.max(logpost.candidates['Period'])),
+            ymin=min(np.min(candidates['Radius']), np.min(logpost.candidates['Radius'])),
+            ymax=max(np.max(candidates['Radius']), np.max(logpost.candidates['Radius'])))
     pp.xscale('log')
     pp.yscale('log')
     pp.ylabel(r'$R$ ($R_\oplus$)')
@@ -299,6 +303,10 @@ def plot_selection(logpost, chain, Ndraw=100, outdir=None):
     pp.subplot(2,2,4)
     pu.plot_histogram_posterior(logpost.candidates['Period'], color='k', normed=True, histtype='step', log=True)
     pu.plot_histogram_posterior(all_candidates['Period'], color='b', normed=True, histtype='step', log=True)
+    pp.yscale('log')
+    pp.axis(xmin=min(np.min(candidates['Period']), np.min(logpost.candidates['Period'])),
+            xmax=max(np.max(candidates['Period']), np.max(logpost.candidates['Period'])),
+            ymin=1e-4)
     pp.xlabel(r'$P$ ($\mathrm{yr}$)')
     pp.ylabel(r'$p(\ln P)$')
 
@@ -308,7 +316,10 @@ def plot_selection(logpost, chain, Ndraw=100, outdir=None):
 def plot_nplanets_histogram(chain, outdir=None):
     tau = ac.autocorrelation_length_estimate(np.mean(chain[:,:,0], axis=0))
 
-    nps = chain[:,::tau,0].flatten()
+    if tau is None:
+        nps = chain[:,:,0].flatten()
+    else:
+        nps = chain[:,::tau,0].flatten()
 
     pu.plot_histogram_posterior(nps, normed=True, color='k', histtype='step')
     pp.xlabel(r'$R_\mathrm{pl}$')
