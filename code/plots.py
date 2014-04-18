@@ -98,7 +98,7 @@ def plot_true_foreground_density(logpost, p):
     pp.xscale('log')
     pp.yscale('log')
 
-def range(xs):
+def par_range(xs):
     """Returns ``(mean(xs), mean(xs)-x5, x95-mean(xs))`` where ``x5`` and
     ``x95`` are the 5-th and 95-th percentile of the ``xs``.
 
@@ -343,3 +343,25 @@ def paper_plots(logpost, chain, eta_earths, outdir):
 
     pp.figure()
     plot_selection(logpost, chain, outdir=outdir)
+
+def paper_tex(logpost, chain, eta_earths, rs, outdir):
+    ea = par_range(100.0*eta_earths)
+    rpl = par_range(chain[:,:,0])
+    rpk = par_range(np.exp(chain[:,:,3]))
+    rc = par_range(rs)
+    fp = par_range(100.0*logpost.systems.shape[0]*chain[:,:,1]/logpost.candidates.shape[0])
+    pp = par_range(np.exp(chain[:,:,2]))
+
+    with open(op.join(outdir, 'quantities.tex'), 'w') as out:
+        out.write('\\newcommand{{\\earange}}{{{0:0.1f}_{{-{1:0.1f}}}^{{+{2:0.1f}}}\\%}}\n'.format(ea[0], ea[1], ea[2]))
+
+        out.write('\\newcommand{{\\rplrange}}{{{0:0.2f}_{{-{1:0.2f}}}^{{+{2:0.2f}}}}}\n'.format(rpl[0], rpl[1], rpl[2]))
+
+        out.write('\\newcommand{{\\rpeakrange}}{{{0:0.2f}_{{-{1:0.2f}}}^{{+{2:0.2f}}}}}\n'.format(rpk[0], rpk[1], rpk[2]))
+
+        out.write('\\newcommand{{\\corrcoeffrange}}{{{0:0.3f}_{{-{1:0.3f}}}^{{+{2:0.3f}}}}}\n'.format(rc[0], rc[1], rc[2]))
+
+        out.write('\\newcommand{{\\fposrange}}{{{0:0.1f}_{{-{1:0.1f}}}^{{+{2:0.1f}}}\\%}}\n'.format(fp[0], fp[1], fp[2]))
+
+        out.write('\\newcommand{{\\ppeakrange}}{{{0:0.3f}_{{-{1:0.3f}}}^{{+{2:0.3f}}}}}\n'.format(pp[0], pp[1], pp[2]))
+        

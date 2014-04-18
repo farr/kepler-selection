@@ -20,6 +20,8 @@
 \newcommand{\apj}{The Astrophysical Journal}
 \newcommand{\apjs}{The Astrophysical Journal Supplement}
 
+\input{quantities}
+
 \begin{document}
 \title{The Occurrence of Earth-Like Planets Around Other Stars}
 
@@ -44,10 +46,10 @@
   analyzing a region of the period-radius parameter space where
   observations are complete and extrapolating to $R = \REarth$ and $P
   = 1 \mathrm{yr}$\cite{2011ApJ...738..151C,2012ApJ...745...20T} or
-  applying a binned analysis in the period-radius
-  plane\cite{2013ApJ...778...53D,2013PNAS..11019273P}.  Here we
-  present constraints on $\etaearth$ from a parameterised forward
-  model of the (correlated) period-radius distribution and the
+  applying a binned analysis incorporating survey incompletness in the
+  period-radius plane\cite{2013ApJ...778...53D,2013PNAS..11019273P}.
+  Here we present constraints on $\etaearth$ from a parameterised
+  forward model of the (correlated) period-radius distribution and the
   observational selection function in the most recent (Q17) data
   release from the Kepler
   satellite\cite{2010Sci...327..977B,2011ApJ...736...19B,2013ApJS..204...24B}.
@@ -63,15 +65,17 @@
   simultaneously estimate $\etaearth$, place constraints on the planet
   period-radius distribution function, and determine the degree of
   contamination by false-positive candidate indentifications.  We find
-  $\etaearth = 3.8^{+2.1}_{-1.6}\%$ (90\% CL).  Additionally, we find
-  that each star hosts $3.82_{-0.60}^{+0.70}$ planets with $P \lesssim
-  3 \mathrm{yr}$ and $R \gtrsim 0.2 \REarth$, that the peak of the
-  planet radius distribution lies at $\Rpeak = 1.25_{-0.17}^{+0.16}
-  \REarth$, and that $\ln P$ and $\ln R$ are correlated with
-  correlation coefficient $r = 0.335_{-0.054}^{+0.052}$ (all 90\% CL).
-  Our empirical model for false-positive contamination is consistent
-  with the dominant source being backgroud eclipsing binary
-  stars\cite{2013ApJ...766...81F}, with $7.8_{-1.3}^{+1.4}\%$ (90\%
+  $\etaearth = \earange$ (90\% CL), in agreement with
+  Ref.\ \cite{2013PNAS..11019273P}.  However, in contrast to
+  Ref.\ \cite{2013PNAS..11019273P}, we can conclude that each star
+  hosts $\rplrange$ planets with $P \lesssim 3 \mathrm{yr}$
+  and $R \gtrsim 0.2 \REarth$, that the peak of the planet radius
+  distribution lies at $\Rpeak = \rpeakrange \REarth$, and
+  that $\ln P$ and $\ln R$ are correlated with correlation coefficient
+  $r = \corrcoeffrange$ (all 90\% CL).  Our empirical model
+  for false-positive contamination is consistent with the dominant
+  source being backgroud eclipsing binary
+  stars\cite{2013ApJ...766...81F}, with $\fposrange$ (90\%
   CL) of the candidates being false-positives.
 \end{abstract}
 
@@ -81,9 +85,8 @@
       accounting for selection effects and false positives.}  Recall
     that $\etaearth \equiv \left. \frac{dN_\mathrm{pl}}{d\ln P \,d \ln
       R} \right|_{P = 1\mathrm{yr}, R=1\REarth}$.  Vertical lines
-    indicate the 90\% credible range.  We find $\etaearth =
-    3.8^{+2.1}_{-1.6}\%$, slightly lower than but consistent with
-    previous work\cite{2013PNAS..11019273P}.}
+    indicate the 90\% credible range.  We find $\etaearth = \earange$,
+    in agreement with previous work\cite{2013PNAS..11019273P}.}
 \end{figure}
 
 \begin{figure}
@@ -91,7 +94,7 @@
   \caption{\label{fig:npl} \textbf{The posterior on $\Rpl$.}  Recall
     that $\Rpl$ is the number of planets per star.  Vertical lines
     indicate the 90\% credible range.  We find $\Rpl =
-    3.82_{-0.60}^{+0.70}$. \Will{CITE/discuss previous work.}}
+    \rplrange$. \Will{CITE/discuss previous work.}}
 \end{figure}
 
 \begin{figure}
@@ -100,18 +103,18 @@
       period-radius distribution accounting for selection effects and
       false-positives.}  (Upper Left) The planet number density per
     logarithmic planet radius.  The density peaks at $\Rpeak =
-    1.19_{-0.18}^{+0.17} \REarth$ (90\% CL).  (Upper Right) The planet
+    \rpeakrange \REarth$ (90\% CL).  (Upper Right) The planet
     number density in the period-radius plane.  The inferred
     correlation coefficient between $\ln P$ and $\ln R$ is $r =
-    0.335_{-0.054}^{+0.052}$.  (Lower Left) Scatter plot of the radius
+    \corrcoeffrange$.  (Lower Left) Scatter plot of the radius
     and period of the Kepler planet candidates.  Color indicates the
     posterior false-positive probability for each candidate.  Overall,
-    the model prefers a false-positive rate of $7.8_{-1.3}^{+1.4}\%$
+    the model prefers a false-positive rate of $\fposrange$
     (90\% CL).  The primary contaminant is probably background
-    eclipsing binaries; our rate is consistent with previous
-    work\cite{2013ApJ...766...81F}. (Lower Right) The planet number
-    density per logarithmic planet period.  The density peaks at $P =
-    0.075_{-0.006}^{+0.007}\mathrm{yr}$.}
+    eclipsing binaries; our contamination rate is consistent with
+    previous work\cite{2013ApJ...766...81F}. (Lower Right) The planet
+    number density per logarithmic planet period.  The density peaks
+    at $P = \ppeakrange \mathrm{yr}$ (90\% CL).}
 \end{figure}
 
 \begin{figure}
@@ -128,16 +131,16 @@
       check}---the model produces a good fit to the observed
     candidates over the range of reported radii.  (Upper Right)
     Scatter plot of the observed candidates (black circles) and a
-    posterior-averaged draw of candidates from the model (blue
-    circles).  (Lower Left) Scatter plot of the observed candidates.
-    Colors indicate the posterior-averaged selection probability for
-    each planet about its host star.  Recall that the selection
-    probability is treated a product of a geometric factor giving the
-    probability of an isotropically-oriented orbit producing a transit
-    and a signal-to-noise-ratio-dependent transit detection
-    probability.  (Lower Right) The observed (black curve) and
-    synthetic (blue curve; including planets and false positives, and
-    using the fitted selection model to down-select the candidates
+    posterior-averaged draw of observed candidates from the model
+    (blue circles).  (Lower Left) Scatter plot of the observed
+    candidates.  Colors indicate the posterior-averaged selection
+    probability for each planet about its host star.  Recall that the
+    selection probability is treated a product of a geometric factor
+    giving the probability of an isotropically-oriented orbit
+    producing a transit and a signal-to-noise-ratio-dependent transit
+    detection probability.  (Lower Right) The observed (black curve)
+    and synthetic (blue curve; including planets and false positives,
+    and using the fitted selection model to down-select the candidates
     from the planet distribution) normalised candidate density per
     logarithmic period.  Except for the aforementioned hot Jupiter
     peak at $P \simeq 1 \mathrm{day}$ the model produces a good fit to
