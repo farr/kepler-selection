@@ -11,14 +11,29 @@
 \newcommand{\etaearth}{\eta_\oplus}
 \newcommand{\Rpeak}{R_\mathrm{peak}}
 \newcommand{\REarth}{R_\oplus}
+\newcommand{\RSun}{R_\odot}
+\newcommand{\RStar}{R_\mathrm{star}}
+\newcommand{\MStar}{M_\mathrm{star}}
+\newcommand{\MSun}{M_\odot}
 \newcommand{\Rpl}{R_\mathrm{pl}}
+\newcommand{\Npl}{N_\mathrm{pl}}
+
+\newcommand{\Rbg}{R_\mathrm{bg}}
+\newcommand{\Nbg}{N_\mathrm{bg}}
+
+\newcommand{\rhomin}{\rho_\mathrm{min}}
+\newcommand{\rhomax}{\rho_\mathrm{max}}
 
 \newcommand{\email}[1]{\href{mailto:#1}{\nolinkurl{#1}}}
 
 \newcommand{\Will}[1]{\textcolor{cyan}{Will: #1}}
 
+\newcommand{\aj}{The Astronomical Journal}
 \newcommand{\apj}{The Astrophysical Journal}
+\newcommand{\apjl}{The Astrophysical Journal Letters}
 \newcommand{\apjs}{The Astrophysical Journal Supplement}
+\newcommand{\mnras}{Monthly Notices of the Royal Astronomical Society}
+\newcommand{\pasp}{Publications of the Astronomical Society of the Pacific}
 
 \input{quantities}
 
@@ -30,7 +45,7 @@
 \maketitle
 
 \begin{affiliations}
-\item School of Physics and Astronomy, Univeristy of Birmingham, Birmingham, B15 2TT, United Kingdom
+\item School of Physics and Astronomy, University of Birmingham, Birmingham, B15 2TT, United Kingdom
 \end{affiliations}
 
 \begin{abstract}
@@ -40,44 +55,254 @@
   Earth-like extrasolar planets.  Measurement of $\etaearth$ is
   complicated by the difficulty of detecting Earth-like planets in
   Earth-like orbits about Sun-like stars.  Previous
-  estimates\cite{2011ApJ...738..151C,2012ApJ...745...20T,2013ApJ...778...53D,2013PNAS..11019273P}
+  estimates\cite{Catanzarite2011,Traub2012,Dong2013,Petigura2013,Foreman-Mackey2014}
   place $1\% \lesssim \etaearth \lesssim 34\%$.  These works dealt
   with the problem of selection effects in the sample by either
   analyzing a region of the period-radius parameter space where
   observations are complete and extrapolating to $R = \REarth$ and $P
-  = 1 \mathrm{yr}$\cite{2011ApJ...738..151C,2012ApJ...745...20T} or
-  applying a binned analysis incorporating survey incompletness in the
-  period-radius plane\cite{2013ApJ...778...53D,2013PNAS..11019273P}.
-  Here we present constraints on $\etaearth$ from a parameterised
-  forward model of the (correlated) period-radius distribution and the
-  observational selection function in the most recent (Q17) data
-  release from the Kepler
-  satellite\cite{2010Sci...327..977B,2011ApJ...736...19B,2013ApJS..204...24B}.
-  Our data set comprises 181,568 systems observed under the Kepler
-  exoplanet observing program, producing 2598 planetary candidates.
+  = 1 \mathrm{yr}$\cite{Catanzarite2011,Traub2012}, applying a binned
+  analysis incorporating survey incompleteness in the period-radius
+  plane\cite{Dong2013,Petigura2013} or analysing the results of a
+  customised planet detection pipeline on a subset of the Kepler
+  observations\cite{Petigura2013,Foreman-Mackey2014}.  Here we present
+  constraints on $\etaearth$ from a parameterised forward model of the
+  (correlated) period-radius distribution and the observational
+  selection function in the most recent (Q17) data release from the
+  Kepler satellite\cite{Borucki2010,Borucki2011,Batalha2013}.  Our
+  data set comprises 181,568 systems observed under the Kepler
+  exoplanet observing program (mostly G-type stars on the main
+  sequence\cite{Batalha2010}), producing 2598 planetary candidates.
   We parameterise the distribution of planetary periods and radii
   using a single, correlated Gaussian component; treat selection
   effects using a parameterised transit detection probability based on
   the measured noise level and stellar properties in the Kepler
   catalog; and include an empirically-parameterised, independent
-  component in the planet period-radius distribution to represent
+  component in the period-radius distribution to represent
   false-positive planet detections.  Using our model we can
   simultaneously estimate $\etaearth$, place constraints on the planet
   period-radius distribution function, and determine the degree of
-  contamination by false-positive candidate indentifications.  We find
-  $\etaearth = \earange$ (90\% CL), in agreement with
-  Ref.\ \cite{2013PNAS..11019273P}.  However, in contrast to
-  Ref.\ \cite{2013PNAS..11019273P}, we can conclude that each star
-  hosts $\rplrange$ planets with $P \lesssim 3 \mathrm{yr}$
-  and $R \gtrsim 0.2 \REarth$, that the peak of the planet radius
-  distribution lies at $\Rpeak = \rpeakrange \REarth$, and
-  that $\ln P$ and $\ln R$ are correlated with correlation coefficient
-  $r = \corrcoeffrange$ (all 90\% CL).  Our empirical model
-  for false-positive contamination is consistent with the dominant
-  source being backgroud eclipsing binary
-  stars\cite{2013ApJ...766...81F}, with $\fposrange$ (90\%
-  CL) of the candidates being false-positives.
+  contamination by false-positive candidate identifications.  We find
+  $\etaearth = \earange$ (90\% CL), in contrast to
+  Ref.\ \cite{Petigura2013} but rough agreement with the analysis of
+  the same data set in Ref.\ \cite{Foreman-Mackey2014}.  Also in
+  contrast to Ref.\ \cite{Petigura2013}, we can conclude that each
+  star hosts $\rplrange$ planets with $P \lesssim 3 \mathrm{yr}$ and
+  $R \gtrsim 0.2 \REarth$, that the peak of the planet radius
+  distribution lies at $\Rpeak = \rpeakrange \REarth$, and that $\ln
+  P$ and $\ln R$ are correlated with correlation coefficient $r =
+  \corrcoeffrange$ (all 90\% CL).  Our empirical model for
+  false-positive contamination is consistent with the dominant source
+  being background eclipsing binary stars\cite{Fressin2013}, with
+  $\fposrange$ (90\% CL) of the candidates being false-positives.
 \end{abstract}
+
+The Kepler satellite detects planets by observing a decrement in the
+photometric intensity of a planet's host star as the planet transits
+between the telescope and the star.  The Q17 data release describes
+2598 ``candidate'' planetary transit signals identified by the Kepler
+team from observations of stars in the ``EX'' observing program (which
+are primarily G-type main-sequence stars similar to our own
+Sun\cite{Batalha2010}), giving the inferred planetary period and
+radius for each.  The fractional depth of a planetary transit signal
+depends only on the radii of the planet and its host star.  The signal
+to noise ratio of a series of transits about a particular star in the
+Kepler satellite scales with planetary period and radius
+as\cite{Chatterjee2012}
+\begin{equation}
+  \rho = \rho_0 \left( \frac{R}{\REarth} \right)^2 \left(
+  \frac{P}{1\,\mathrm{yr}} \right)^{-1/3},
+\end{equation}
+where $\rho_0$ is the signal to noise ratio of a Earth-radius planet
+in a one-year orbit about that star, which depends on the number of
+quarters of observation of that star, the stellar radius, and the
+intrinsic variability of the stellar intensity
+(CDPP\cite{Christiansen2012}).  In our analysis, we obtain these
+quantities from the Kepler Input Catalog\cite{Batalha2010,Brown2011}
+and the MAST Kepler
+archive\footnote{\url{http://archive.stsci.edu/kepler/}}.  To a good
+approximation (see Fig.\ \ref{fig:selection} below), the detectability
+of a series of planetary transits in the Kepler data set is a function
+of the signal to noise ratio of the series.  Because the detectability
+of planet transits depends on both period and radius, it is important
+to consider the joint (i.e.\ two-dimensional) distribution of these
+quantities in the data\cite{Tabachnik2002,Youdin2011}.  We model the
+detection probability as a function of signal to noise as
+\begin{equation}
+  \label{eq:pdetect}
+  p_\mathrm{detect} = \begin{cases}
+    0 & \rho < \rhomin \\
+    \frac{\log \rho - \log \rhomin}{\log \rhomax - \log \rhomin} &
+    \rhomin < \rho < \rhomax \\
+    1 & \rhomax < \rho
+  \end{cases};
+\end{equation}
+the detection probability is zero for signals with $\rho < \rhomin$,
+rises linearly in $\log \rho$ for signals with $\rhomin < \rho <
+\rhomax$, and is 100\% for signals with $\rhomax < \rho$.  $\rhomin$
+and $\rhomax$ are parameters of our model.  We find $\rhomin =
+\rhominrange$ and $\rhomax = \rhomaxrange$ (90\% CL), in rough
+agreement with Refs.\ \cite{Borucki2011,Batalha2013}.
+
+The probability of a planet's orbit to align with the line-of-sight to
+Earth and thereby produce a transit signal is
+\begin{equation}
+  \label{eq:ptransit}
+  p_\mathrm{transit} = 0.0016\, \frac{\RStar}{\RSun}
+  \left(\frac{\MStar}{\MSun}\right)^{-1/3} \left(\frac{P}{1\,\mathrm{yr}}\right)^{-2/3}.
+\end{equation}
+Putting Eq.\ \ref{eq:pdetect} and \ref{eq:ptransit} together, the
+probability that Kepler will detect a planet of radius $R$ orbiting
+its host star at period $P$ is 
+\begin{equation}
+  p_\mathrm{select} = p_\mathrm{transit} p_\mathrm{detect}.
+\end{equation}
+
+We model the intrinsic distribution of planets as log-normal in period
+and radius, so observed planets populate the candidate $P$-$R$ plane
+with number density
+\begin{equation}
+  \label{eq:foreground-rate}
+  \frac{dN_\mathrm{obs}}{d\ln P\, d\ln R} = \left[ \sum_\mathrm{stars}
+    p_\mathrm{select}(P, R) \right] \Rpl N\left[ \mu, \Sigma
+    \right]\left( \ln P, \ln R \right),
+\end{equation}
+where $\Rpl$, $\mu$, and $\Sigma$ are parameters of our model, with
+$\Rpl$ the average number of planets per star, $\mu = \left[ \mu_P,
+  \mu_R \right]$ the mean of $\ln P$ and $\ln R$, and $\Sigma = \left[
+  \left[ \Sigma_{PP}, \Sigma_{PR} \right], \left[ \Sigma_{PR},
+    \Sigma_{RR} \right]\right]$ the covariance matrix of $\ln P$ and
+$\ln R$; $N\left[ \mu, \Sigma \right](x,y)$ is the normal distribution 
+\begin{equation}
+  N\left[ \mu, \Sigma \right](x,y) = \frac{1}{2 \pi \sqrt{\Sigma_{xx}
+      \Sigma_{yy} - \Sigma_{xy}^2}} \exp\left( - \frac{1}{2} \left(\left[
+    x,y \right] - \mu \right) \cdot \Sigma^{-1} \cdot \left(\left[ x,
+    y\right] - \mu \right)^T \right).
+\end{equation}
+The expected number of observed planets in our model is
+\begin{equation}
+  \Npl = \Rpl \int dP\,dR\, \sum_\mathrm{stars} p_\mathrm{select}(P,
+  R).
+\end{equation}
+Our model assumes that planets appear around their host stars in a
+Poisson process; this is almost certainly wrong in
+detail\cite{Weissbein2012}, but nevertheless provides a good fit to
+the observed data (see Figure \ref{fig:selection}).
+
+In addition to true planetary signals, we model a false-positive
+background of planet candidates empirically, assuming they populate
+the candidate $P$-$R$ plane with number density
+\begin{equation}
+  \label{eq:background-rate}
+  \frac{d\Nbg}{d \ln P \, d \ln R} = \frac{\Rbg}{\Delta \ln P \Delta
+    \ln R} \left( 1 + \vec{\gamma} \cdot \left[ \ln P - \ln P_\mathrm{mid} , \ln
+    R - \ln R_\mathrm{mid} \right] \right),
+\end{equation}
+where $\Delta \ln P = \ln P_\mathrm{max} - \ln P_\mathrm{min}$, $\ln
+P_\mathrm{mid} = 1/2\left(\ln P_\mathrm{max} - \ln P_\mathrm{min}
+\right)$, $\Delta \ln R = \ln R_\mathrm{max} - \ln R_\mathrm{min}$,
+$\ln R_\mathrm{mid} = 1/2\left(\ln R_\mathrm{max} - \ln R_\mathrm{min}
+\right)$.  $\Rbg$, the expected number of background false-positive
+events; $P_\mathrm{max}$, $P_\mathrm{min}$, $R_\mathrm{max}$, and
+$R_\mathrm{min}$, the boundaries in the $P$-$R$ plane within which
+background events appear; and $\gamma$, the gradient in the number
+density of background events, are parameters of our model.
+
+Unlike Ref.\ \cite{Foreman-Mackey2014}, we do not attempt to model the
+observational uncertainties in the estimated periods and radii from
+the Kepler candidate data set.  In spite of several candidates with
+very large uncertainties in measured parameters, we have found that our
+fit is essentially unchanged when applied to synthetic observations
+with periods and radii drawn re-drawn from the range of observational
+uncertainties quoted in the Q17 data release.  
+
+The likelihood of the observed periods and radii under our model is an
+inhomogeneous Poisson likelihood\cite{Farr2013,Youdin2011} with a rate
+that is the sum of Eq.\ \eqref{eq:foreground-rate} and
+Eq.\ \eqref{eq:background-rate}.  We impose priors on our 15 model
+parameters as follows: for the planet occurrence rate $\Rpl$ and
+(implicitly) the parameters describing selection effects, we impose a
+$\frac{1}{\sqrt{\Npl}}$ prior; for the background rate $\Rbg$ we
+impose a $\frac{1}{\sqrt{\Rbg}}$ prior; for the selection model
+parameters $\rhomin$ and $\rhomax$ we impose a log-normal prior with
+unit width at SNRs of 3 and 11, respectively; in all other parameters
+we impose a flat (i.e.\ constant density) prior.  The product of
+likelihood and prior gives a Bayesian posterior density function on
+the fifteen-dimensional parameter space of our model.  We sample from
+this function using the \texttt{emcee} sampler of
+Ref.\ \cite{Foreman-Mackey2013}.  The posterior describes
+simultaneously the intrinsic distribution and number of exoplanets,
+the amount and distribution of the contaminating false-positive events
+in the candidate data set, and the selection function of the
+instrument for true planetary transit events.
+
+The main result of this paper, the posterior distribution for
+$\etaearth$, the number density of Earth-like planets, marginalised
+over all other parameters in our model (i.e.\ incorporating our
+uncertainty about contamination, selection effects, intrinsic
+distribution of planets, etc) appears in Fig.\ \ref{fig:eta-earth}.
+Recall that
+\begin{equation}
+  \etaearth = \left. \frac{dN}{d \ln P \ln R} \right|_{R = \REarth, P
+    = 1\,\mathrm{yr}} = \Rpl N\left[ \mu, \Sigma \right]\left( \ln 1\,\mathrm{yr},
+  \ln \REarth \right),
+\end{equation}
+which is roughly the number of planets per star with periods and radii
+within a factor of $\sqrt{e}$ of Earth's.  We find $\etaearth =
+\earange$ (90\% CL).  Our model also gives an estimate of the number
+of planets of any radius and period per star; the posterior for this
+quantity, marginalised over all other parameters appears in
+Fig.\ \ref{fig:npl}.  We find $\Rpl = \rplrange$ (90\% CL).
+
+Our model also allows us to produce a posterior on the distribution of
+planets in the period-radius plane, and a posterior for each observed
+planetary candidate of the probability that this candidate is a planet
+instead of a background contaminant; these posteriors appear in
+Fig. \ref{fig:foreground-dist}.  Our model finds that the
+false-positive rate in the candidate data set is $\fposrange$ (90\%
+CL), consistent with previous work\cite{Fressin2013} estimating the
+contamination in the Kepler candidate set.  Our model has the peak of
+the planet period-radius distribution at $\Rpeak = \rpeakrange
+\REarth$, $P_\mathrm{peak} = \ppeakrange \mathrm{yr}$, and the
+distribution of planetary radii and periods is correlated, with
+correlation coefficient $r = \corrcoeffrange$ (all at 90\% CL).
+
+Our model predicts a distribution for future observed data consistent
+with the already-observed candidate set.  These predictions can be
+used to perform graphical and posterior-predictive model
+checking\cite{Gelman2013}.  Fig.\ \ref{fig:selection} compares the
+predictions of our model for observed periods and radii (incorporating
+both planetary transits and background events) with the candidate set.
+This is a particularly stringent test of our parameterised selection
+model since the observed periods and radii are strongly influenced by
+the selection function of the Kepler telescope and pipeline.  Except
+for the known sub-population of hot
+Jupiters\cite{Albrecht2012,Naoz2012}, our model provides a very good
+fit to the observed data.  That a simple log-normal distribution in
+period and radius fits the observed distribution of planets well may
+indicate that planet formation is a stochastic process with many
+small, correlated, and multiplicative influences on planet period and
+radius resulting, from the central limit theorem, in a log-normal
+distribution in these parameters.
+
+The methods and analysed data sets of
+Refs.\ \cite{Petigura2013,Foreman-Mackey2014} are most comparable to
+ours.  These studies used the same data set,
+produced\cite{Petigura2013} from a subset of the available Kepler data
+and a customised pipeline to search for transit signals.  They both
+accounted for selection effects by measuring the recoverability of
+synthetic transit signals injected into their data, in contrast to our
+approach of empirically determining them from the observed data.
+Neither study attempted to account for contamination from
+falsely-identified candidate transit events, controlling this instead
+through careful choice of threshold.  Both studies used a more
+flexible model for the intrinsic distribution of planets than ours.
+Our result for $\etaearth$ is consistent with, but more precise than,
+Ref.\ \cite{Foreman-Mackey2014} and (somewhat) inconsistent with
+Ref.\ \cite{Petigura2013}.  The reasons for the difference between
+these two analyses of the same data set are not clear, but our
+agreement with Ref.\ \cite{Foreman-Mackey2014} lends support to that
+analysis and also partially validates our empirical selection model by
+comparison to the measured selection function in that work.
 
 \begin{figure}
   \includegraphics[width=\columnwidth]{eta-earth}
@@ -86,7 +311,8 @@
     that $\etaearth \equiv \left. \frac{dN_\mathrm{pl}}{d\ln P \,d \ln
       R} \right|_{P = 1\mathrm{yr}, R=1\REarth}$.  Vertical lines
     indicate the 90\% credible range.  We find $\etaearth = \earange$,
-    in agreement with previous work\cite{2013PNAS..11019273P}.}
+    in agreement with some previous work\cite{Foreman-Mackey2014}, and
+    in contrast to Ref.\ \cite{Petigura2013}.}
 \end{figure}
 
 \begin{figure}
@@ -94,7 +320,7 @@
   \caption{\label{fig:npl} \textbf{The posterior on $\Rpl$.}  Recall
     that $\Rpl$ is the number of planets per star.  Vertical lines
     indicate the 90\% credible range.  We find $\Rpl =
-    \rplrange$. \Will{CITE/discuss previous work.}}
+    \rplrange$.}
 \end{figure}
 
 \begin{figure}
@@ -112,7 +338,7 @@
     the model prefers a false-positive rate of $\fposrange$
     (90\% CL).  The primary contaminant is probably background
     eclipsing binaries; our contamination rate is consistent with
-    previous work\cite{2013ApJ...766...81F}. (Lower Right) The planet
+    previous work\cite{Fressin2013}. (Lower Right) The planet
     number density per logarithmic planet period.  The density peaks
     at $P = \ppeakrange \mathrm{yr}$ (90\% CL).}
 \end{figure}
@@ -127,16 +353,18 @@
     down-select the candidates from the planet distribution)
     normalised candidate density per logarithmic radius.  Except for a
     discrepancy at $R \simeq 10 \REarth$---associated with hot
-    Jupiters, a distinct planetary population\Will{CITE, and
-      check}---the model produces a good fit to the observed
-    candidates over the range of reported radii.  (Upper Right)
-    Scatter plot of the observed candidates (black circles) and a
-    posterior-averaged draw of observed candidates from the model
-    (blue circles).  (Lower Left) Scatter plot of the observed
-    candidates.  Colors indicate the posterior-averaged selection
-    probability for each planet about its host star.  Recall that the
-    selection probability is treated a product of a geometric factor
-    giving the probability of an isotropically-oriented orbit
+    Jupiters, a distinct planetary
+    population\cite{Albrecht2012,Naoz2012}---the model produces a good
+    fit to the observed candidates over the range of reported radii.
+    Note particularly the tail at large radii that comes from
+    background contaminants in both observed and synthetic data.
+    (Upper Right) Scatter plot of the observed candidates (black
+    circles) and a posterior-averaged draw of observed candidates from
+    the model (blue circles).  (Lower Left) Scatter plot of the
+    observed candidates.  Colors indicate the posterior-averaged
+    selection probability for each planet about its host star.  Recall
+    that the selection probability is treated a product of a geometric
+    factor giving the probability of an isotropically-oriented orbit
     producing a transit and a signal-to-noise-ratio-dependent transit
     detection probability.  (Lower Right) The observed (black curve)
     and synthetic (blue curve; including planets and false positives,
@@ -150,8 +378,11 @@
 \bibliography{kepler-selection}
 
 \begin{addendum}
-\item WMF and IM are supported by a STFC consolidated grant number
-  NNNN.  Computations in this work were performed on the University of
+\item The code implementing this analysis is available under an
+  open-source ``MIT'' license at
+  \url{https://github.com/farr/kepler-selection}.  This work was
+  supported by the Science and Technology Facilities Council.
+  Computations in this work were performed on the University of
   Birmingham's BlueBEAR cluster.  Some/all of the data presented in
   this paper were obtained from the Mikulski Archive for Space
   Telescopes (MAST). STScI is operated by the Association of
