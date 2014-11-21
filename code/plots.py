@@ -16,13 +16,14 @@ def setup():
 
     params = { 'backend' : 'pdf',
                'axes.labelsize' : 10,
-               'text.fontsize' : 10,
+               'font.size' : 10,
                'legend.fontsize' : 10,
                'xtick.labelsize' : 8,
                'ytick.labelsize' : 8,
                'text.usetex' : True,
                'figure.figsize' : fig_size,
-               'figure.autolayout' : True}
+               'figure.autolayout' : True,
+               'image.cmap' : 'cubehelix'}
 
     pp.rcParams.update(params)
 
