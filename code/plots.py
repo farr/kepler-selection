@@ -332,12 +332,137 @@ def plot_nplanets_histogram(chain, outdir=None):
     if outdir is not None:
         pp.savefig(op.join(outdir, 'npl.pdf'))
 
+def _pselect(rhos, log_rho_min, log_rho_max):
+    ps = np.zeros(rhos.shape[0])
+
+    ps[rhos > np.exp(log_rho_max)] = 1.0
+
+    sel = (rhos > np.exp(log_rho_min)) & (rhos < np.exp(log_rho_max))
+    ps[sel] = (np.log(rhos[sel]) - log_rho_min)/(log_rho_max - log_rho_min)
+
+    return ps
+        
+def plot_pdetect(logpost, chain, outdir=None):
+    fchain = chain.reshape((-1, chain.shape[2]))
+    pfchain = logpost.to_params(fchain)
+
+    rho_max = 1.0 + np.exp(np.max(pfchain['log_snr_max']))
+    rhos = np.linspace(0, rho_max, 100)
+
+    psel = []
+    for p in fchain:
+        p = logpost.to_params(p)
+        psel.append(_pselect(rhos, p['log_snr_min'], p['log_snr_max']))
+    psel = np.array(psel)
+
+    med = np.median(psel, axis=0)
+    low = np.percentile(psel, 5, axis=0)
+    high = np.percentile(psel, 95, axis=0)
+
+    pp.fill_between(rhos, low, high, color='k', alpha=0.5)
+    pp.plot(rhos, med, '-k')
+    pp.xlabel(r'$\rho$')
+    pp.ylabel(r'$p_\mathrm{detect}$')
+
+    if outdir is not None:
+        pp.savefig(op.join(outdir, 'pdetect.pdf'))
+
+def plot_correlation_coefficient(logpost, chain, outdir=None):
+    fchain = chain.reshape((-1, chain.shape[2]))
+
+    rs = []
+    for p in fchain:
+        cm = logpost.covariance_matrix(p)
+        rs.append(cm[0,1] / np.sqrt(cm[0,0]*cm[1,1]))
+    rs = np.array(rs)
+
+    pu.plot_histogram_posterior(rs, normed=True, histtype='step', color='k')
+    pp.xlabel(r'$r$')
+    pp.ylabel(r'$p(r)$')
+
+    pp.axvline(np.percentile(rs, 5), color='k')
+    pp.axvline(np.percentile(rs, 95), color='k')
+
+    if outdir is not None:
+        pp.savefig(op.join(outdir, 'corr.pdf'))
+
+def plot_selection_background(logpost, chain, outdir=None):
+
+    pp.subplot(2, 1, 1)
+    fchain = chain.reshape((-1, chain.shape[2]))
+    pfchain = logpost.to_params(fchain)
+
+    rho_max = 1.0 + np.exp(np.max(pfchain['log_snr_max']))
+    rhos = np.linspace(0, rho_max, 100)
+
+    psel = []
+    for p in fchain:
+        p = logpost.to_params(p)
+        psel.append(_pselect(rhos, p['log_snr_min'], p['log_snr_max']))
+    psel = np.array(psel)
+
+    med = np.median(psel, axis=0)
+    low = np.percentile(psel, 5, axis=0)
+    high = np.percentile(psel, 95, axis=0)
+
+    pp.fill_between(rhos, low, high, color='k', alpha=0.5)
+    pp.plot(rhos, med, '-k')
+    pp.xlabel(r'$\rho$')
+    pp.ylabel(r'$p_\mathrm{detect}$')
+
+    pp.subplot(2, 1, 2)
+    ll = logpost.lower_left.copy()
+    ur = logpost.upper_right.copy()
+
+    ll[0] = np.log(np.max(logpost.to_params(fchain)['Pmin']))
+
+    XS, YS = np.meshgrid(np.linspace(ll[0], ur[0], 100),
+                         np.linspace(ll[1], ur[1], 100))
+
+    ZS = 0.0
+    for p in fchain:
+        ZS += logpost.systems.shape[0]*p[1]*logpost.background_density(p, np.exp(XS.flatten()), np.exp(YS.flatten())).reshape(XS.shape)
+    ZS /= fchain.shape[0]
+
+    pcolormesh(np.exp(XS), np.exp(YS), ZS)
+    pp.xscale('log')
+    pp.yscale('log')
+
+    pp.colorbar()
+
+    pp.xlabel(r'$P$ (yr)')
+    pp.ylabel(r'$R$ ($R_\oplus$)')
+
+    pp.axis(xmin=np.exp(ll[0]), ymin=np.exp(ll[1]), xmax=np.exp(ur[0]), ymax=np.exp(ur[1]))
+    
+    if outdir is not None:
+        pp.savefig(op.join(outdir, 'bg.pdf'))
+
+def plot_parameters(logpost, chain, eta_earths, outdir=None):
+
+    pp.subplot(2,1,1)
+    pu.plot_histogram_posterior(eta_earths.flatten(), normed=True, histtype='step', color='k')
+    pp.xlabel(r'$\eta_\oplus$')
+    pp.ylabel(r'$p\left(\eta_\oplus\right)$')
+
+    pp.axvline(np.percentile(eta_earths, 5), color='k')
+    pp.axvline(np.percentile(eta_earths, 95), color='k')
+
+    pp.subplot(2,1,2)
+    nps = chain[:,:,0].flatten()
+    pu.plot_histogram_posterior(nps, normed=True, color='k', histtype='step')
+    pp.xlabel(r'$R_\mathrm{pl}$')
+    pp.ylabel(r'$p(R_\mathrm{pl})$')
+
+    pp.axvline(np.percentile(nps, 5), color='k')
+    pp.axvline(np.percentile(nps, 95), color='k')
+
+    if outdir is not None:
+        pp.savefig(op.join(outdir, 'pars.pdf'))
+
 def paper_plots(logpost, chain, eta_earths, outdir):
     pp.figure()
-    plot_nplanets_histogram(chain, outdir=outdir)
-
-    pp.figure()
-    plot_eta_earth_histogram(eta_earths, outdir=outdir)
+    plot_parameters(logpost, chain, eta_earths, outdir=outdir)
 
     pp.figure()
     plot_foreground_distributions(logpost, chain, outdir=outdir)
