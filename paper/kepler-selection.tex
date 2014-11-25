@@ -15,10 +15,10 @@
 \newcommand{\RStar}{R_\mathrm{star}}
 \newcommand{\MStar}{M_\mathrm{star}}
 \newcommand{\MSun}{M_\odot}
-\newcommand{\Rpl}{R_\mathrm{pl}}
+\newcommand{\Rpl}{\Lambda_\mathrm{pl}}
 \newcommand{\Npl}{N_\mathrm{pl}}
 
-\newcommand{\Rbg}{R_\mathrm{bg}}
+\newcommand{\Rbg}{\Lambda_\mathrm{bg}}
 \newcommand{\Nbg}{N_\mathrm{bg}}
 
 \newcommand{\rhomin}{\rho_\mathrm{min}}
@@ -30,6 +30,7 @@
 \newcommand{\ilya}[1]{\textcolor{red}{#1}}
 
 \newcommand{\aj}{The Astronomical Journal}
+\newcommand{\aap}{Astronomy \& Astrophysics}
 \newcommand{\apj}{The Astrophysical Journal}
 \newcommand{\apjl}{The Astrophysical Journal Letters}
 \newcommand{\apjs}{The Astrophysical Journal Supplement}
@@ -91,7 +92,12 @@
   \corrcoeffrange$ (all 90\% CL).  Our empirical model for
   false-positive contamination is consistent with the dominant source
   being background eclipsing binary stars\cite{Fressin2013}, with
-  $\fposrange$ (90\% CL) of the candidates being false-positives.  \ilya{[Present the physical interpretation of correlated log-normal distribution as a result.]}
+  $\fposrange$ (90\% CL) of the candidates being false-positives.  The
+  distribution of planets we infer could be the result of a
+  highly-stochastic planet formation process producing many correlated,
+  fractional changes in planet sizes and orbits.  Our approach of
+  determining both the intrinsic distribution of objects and selection
+  effects empirically from survey data is generally applicable.
 \end{abstract}
 
 The Kepler satellite detects planets by observing a decrement in the
@@ -112,8 +118,9 @@ as\cite{Chatterjee2012}
 \end{equation}
 where $\rho_0$ is the signal to noise ratio of a Earth-radius planet
 in a one-year orbit about that star, which depends on the number of
-quarters of observation of that star, the stellar radius \ilya{and mass}, and the
-intrinsic variability of the stellar intensity\cite{Christiansen2012}.  In our analysis, we obtain these
+quarters of observation of that star, the stellar radius and mass, and
+the intrinsic variability of the stellar
+intensity\cite{Christiansen2012}.  In our analysis, we obtain these
 quantities from the Kepler Input Catalog\cite{Batalha2010,Brown2011}
 and the MAST Kepler
 archive\footnote{\url{http://archive.stsci.edu/kepler/}}.  To a good
@@ -123,7 +130,9 @@ of the signal to noise ratio of the series.  Because the detectability
 of planet transits depends on both period and radius, it is important
 to consider the joint (i.e., two-dimensional) distribution of these
 quantities in the data\cite{Tabachnik2002,Youdin2011}.  We model the
-detection probability as a function of signal to noise as 
+detection probability of a transit as a function that rises linearly
+in the log of the signal to noise ratio from zero at a threshold
+signal to noise to one at a larger signal to noise:
 \begin{equation}
   \label{eq:pdetect}
   p_\mathrm{detect} = \begin{cases}
@@ -131,14 +140,12 @@ detection probability as a function of signal to noise as
     \frac{\log \rho - \log \rhomin}{\log \rhomax - \log \rhomin} &
     \rhomin < \rho < \rhomax \\
     1 & \rhomax < \rho
-  \end{cases};
+  \end{cases},
 \end{equation}
-the detection probability is zero for signals with $\rho < \rhomin$,
-rises linearly in $\log \rho$ for signals with $\rhomin < \rho <
-\rhomax$, and is 100\% for signals with $\rhomax < \rho$. \ilya{[Explain model in words before providing equations; say why this model was chosen and how (in)sensitive you are to model choice -- because otherwise, it looks a bit weird that it's shallower-than-linear.]}  $\rhomin$
-and $\rhomax$ are parameters of our model.  We find $\rhomin =
-\rhominrange$ and $\rhomax = \rhomaxrange$ (90\% CL), in rough
-agreement with Refs.\ \cite{Borucki2011,Batalha2013}.
+where $\rhomin$ and $\rhomax$ are parameters of our model.  We find
+$\rhomin = \rhominrange$ and $\rhomax = \rhomaxrange$ (90\% CL), in
+rough agreement with Refs.\ \cite{Borucki2011,Batalha2013}.  A plot of
+our inferred detection probability appears in Fig.\ \ref{fig:det-bg}
 
 The probability that a planet's orbital plane will align with the line-of-sight to
 Earth and thereby produce a transit signal is
@@ -154,11 +161,13 @@ its host star at period $P$ is
   p_\mathrm{select} = p_\mathrm{transit} p_\mathrm{detect}.
 \end{equation}
 
-\ilya{[If introduced in abstract, say a log normal distribution is an excellent fit to the data instead of "we model".
-A log normal distribution in period ... copy from later, but add physics to mathematics.  (Why small multiplicative influences?)] } 
-We model the intrinsic distribution of planets as log-normal in period
-and radius, so observed planets populate the candidate $P$-$R$ plane
-with number density
+A correlated log-normal distribution of planets in period and radius
+would be a natural outcome of a stochastic planet formation process
+that produced many correlated, fractional changes in planet sizes and
+orbits.  As we shall see (Figure\ \ref{fig:selection}), this simple
+model combined with the aforementioned selection function, provides a
+good fit to the Kepler candidate distribution.  In our model, observed
+planets populate the candidate $P$-$R$ plane with number density
 \begin{equation}
   \label{eq:foreground-rate}
   \frac{dN_\mathrm{obs}}{d\ln P\, d\ln R} = \left[ \sum_\mathrm{stars}
@@ -166,31 +175,20 @@ with number density
     \right]\left( \ln P, \ln R \right),
 \end{equation}
 where $\Rpl$, $\mu$, and $\Sigma$ are parameters of our model, with
-$\Rpl$ \ilya{[Different symbol? R overloaded.]} the average number of planets per star, $\mu = \left[ \mu_P,
+$\Rpl$ the average number of planets per star, $\mu = \left[ \mu_P,
   \mu_R \right]$ the mean of $\ln P$ and $\ln R$, and $\Sigma = \left[
   \left[ \Sigma_{PP}, \Sigma_{PR} \right], \left[ \Sigma_{PR},
     \Sigma_{RR} \right]\right]$ the covariance matrix of $\ln P$ and
-$\ln R$; $N\left[ \mu, \Sigma \right](x,y)$ is the normal distribution  \ilya{[Skip next equation.]}
-\begin{equation}
-  N\left[ \mu, \Sigma \right](x,y) = \frac{1}{2 \pi \sqrt{\Sigma_{xx}
-      \Sigma_{yy} - \Sigma_{xy}^2}} \exp\left( - \frac{1}{2} \left(\left[
-    x,y \right] - \mu \right) \cdot \Sigma^{-1} \cdot \left(\left[ x,
-    y\right] - \mu \right)^T \right).
-\end{equation}
-The expected number of observed planets in our model is
-\begin{equation}
-  N_\mathrm{obs} = \Rpl \int dP\,dR\, \sum_\mathrm{stars} p_\mathrm{select}(P,
-  R).
-\end{equation}
-\ilya{[Maybe remove preceding equation.]}
+$\ln R$; $N\left[ \mu, \Sigma \right](x,y)$ is the normal distribution
 Our model assumes that planets appear around their host stars in a
-Poisson process \ilya{[worse -- periods correlated, can't have two planets around same star with very similar periods]}; this is almost certainly wrong in
+Poisson process; this is almost certainly wrong in
 detail\cite{Weissbein2012}, but nevertheless provides a good fit to
 the observed data (see Figure \ref{fig:selection}).
 
 In addition to true planetary signals, we model a false-positive
 background of planet candidates empirically, assuming they populate
-the candidate $P$-$R$ plane with number density \ilya{[Explain in words {\it before} equation.]}
+the candidate $P$-$R$ plane with a number density that has a linear
+gradient across a rectangular region in the $\ln P$-$\ln R$ plane:
 \begin{equation}
   \label{eq:background-rate}
   \frac{d\Nbg}{d \ln P \, d \ln R} = \frac{\Nbg}{\Delta \ln P \Delta
@@ -205,7 +203,10 @@ $\ln R_\mathrm{mid} = 1/2\left(\ln R_\mathrm{max} - \ln R_\mathrm{min}
 events; $P_\mathrm{max}$, $P_\mathrm{min}$, $R_\mathrm{max}$, and
 $R_\mathrm{min}$, the boundaries in the $P$-$R$ plane within which
 background events appear; and $\gamma$, the gradient in the number
-density of background events, are parameters of our model.
+density of background events, are parameters of our model.  This is a
+purely empirical model for the background contamination, but is
+reasonable if the chief contaminant is background eclipsing
+binaries\cite{Fressin2013,Duquennoy1991}.
 
 Unlike Ref.\ \cite{Foreman-Mackey2014}, we do not attempt to model the
 observational uncertainties in the estimated periods and radii from
@@ -219,16 +220,17 @@ The likelihood of the observed periods and radii under our model is an
 inhomogeneous Poisson likelihood\cite{Farr2013,Youdin2011} with a rate
 that is the sum of Eq.\ \eqref{eq:foreground-rate} and
 Eq.\ \eqref{eq:background-rate}.  We impose priors on our 15 model
-parameters as follows: for the planet occurrence rate $\Rpl$ \ilya{[Lamda]} and
+parameters as follows: for the planet occurrence rate $\Rpl$ and
 (implicitly) the parameters describing selection effects, we impose a
-$\frac{1}{\sqrt{\Npl}}$ prior; \ilya{[Nobs; too much technical detail -- consider leaving some for appendix?]} for the background rate $\Rbg$ we
+$\frac{1}{\sqrt{\Npl}}$ prior; for the background rate $\Rbg$ we
 impose a $\frac{1}{\sqrt{\Rbg}}$ prior; for the selection model
 parameters $\rhomin$ and $\rhomax$ we impose a log-normal prior with
-unit width at SNRs of 3 and 11, respectively; in all other parameters
+unit width at signal to noise ratios  of 3 and 11, respectively; in all other parameters
 we impose a flat (i.e., constant-density) prior.  The product of
 likelihood and prior gives a Bayesian posterior density function on
 the fifteen-dimensional parameter space of our model.  We sample from
-this function using the \texttt{emcee} sampler\cite{Foreman-Mackey2013}.  The posterior describes
+this function using the \texttt{emcee}
+sampler\cite{Foreman-Mackey2013}.  The posterior describes
 simultaneously the intrinsic distribution and number of exoplanets,
 the amount and distribution of the contaminating false-positive events
 in the candidate data set, and the selection function of the
@@ -249,20 +251,21 @@ which is roughly the number of planets per star with periods and radii
 within a factor of $\sqrt{e}$ of Earth's.  We find $\etaearth =
 \earange$ (90\% CL).  Our model also gives an estimate of the number
 of planets of any radius and period per star; the posterior for this
-quantity, marginalised over all other parameters appears in
-Fig.\ \ref{fig:npl}.  We find $\Rpl = \rplrange$ (90\% CL).
+quantity, marginalised over all other parameters also appears in
+Fig.\ \ref{fig:eta-earth}.  We find $\Rpl = \rplrange$ (90\% CL).
 
-Our model also \ilya{[Not also -- this is what you use to evaluate previous Eq. :) ]} allows us to produce a posterior on the distribution of
-planets in the period-radius plane, and the probability that any given planetary candidate is a planet
-instead of a background contaminant; these posteriors appear in
-Fig. \ref{fig:foreground-dist}.  Our model finds that the
-false-positive rate in the candidate data set is $\fposrange$ (90\%
-CL), consistent with previous work\cite{Fressin2013} estimating the
-contamination in the Kepler candidate set.  Our model has the peak of
-the planet period-radius distribution at $\Rpeak = \rpeakrange
-\REarth$, $P_\mathrm{peak} = \ppeakrange \mathrm{yr}$, and the
-distribution of planetary radii and periods is correlated, with
-correlation coefficient $r = \corrcoeffrange$ (all at 90\% CL).
+Our model allows us to produce a posterior on the distribution of
+planets in the period-radius plane, and the probability that any given
+planetary candidate is a planet instead of a background contaminant;
+these posteriors appear in Fig. \ref{fig:foreground-dist}.  Our model
+finds that the false-positive rate in the candidate data set is
+$\fposrange$ (90\% CL), consistent with previous
+work\cite{Fressin2013} estimating the contamination in the Kepler
+candidate set.  Our model has the peak of the planet period-radius
+distribution at $\Rpeak = \rpeakrange \REarth$, $P_\mathrm{peak} =
+\ppeakrange \mathrm{yr}$, and the distribution of planetary radii and
+periods is correlated, with correlation coefficient $r =
+\corrcoeffrange$ (all at 90\% CL).
 
 Our model predicts a distribution for future observed data consistent
 with the already-observed candidate set.  These predictions can be
@@ -280,7 +283,7 @@ period and radius fits the observed distribution of planets well may
 indicate that planet formation is a stochastic process with many
 small, correlated, and multiplicative influences on planet period and
 radius resulting, from the central limit theorem, in a log-normal
-distribution in these parameters. \ilya{[Possibly revise wording if moved elsewhere.]}
+distribution in these parameters.
 
 The methods and analysed data sets of
 Refs.\ \cite{Petigura2013,Foreman-Mackey2014} are most comparable to
@@ -314,8 +317,8 @@ Ref.\ \cite{Petigura2013}.
 
 \begin{figure}
   \includegraphics[width=\columnwidth]{bg}
-  \caption{\label{fig:npl} \textbf{Inferred detection probability and
-      density of background contamination.} (Top) The inferred
+  \caption{\label{fig:det-bg} \textbf{Inferred detection probability
+      and density of background contamination.} (Top) The inferred
     detection probability versus signal-to-noise ratio (see
     Eq.\ \eqref{eq:pdetect}) from our parameterised model of selection
     effects.  The solid line is the posterior median detection
@@ -338,18 +341,18 @@ Ref.\ \cite{Petigura2013}.
       period--radius distribution accounting for selection effects and
       false-positives.}  (Upper Left) The planet number density per
     logarithmic planet radius.  The density peaks at $\Rpeak =
-    \rpeakrange \REarth$ (90\% CL).  (Upper Right) The planet
-    number density in the period--radius plane.  The inferred
-    correlation coefficient between $\ln P$ and $\ln R$ is $r =
-    \corrcoeffrange$.  (Lower Left) Scatter plot of the radius
-    and period of the Kepler planet candidates.  Color indicates the
-    posterior false-positive probability for each candidate.  Overall,
-    the model prefers a false-positive rate of $\fposrange$
-    (90\% CL).  The primary contaminant is probably background
-    eclipsing binaries; our contamination rate is consistent with
-    previous work\cite{Fressin2013}. (Lower Right) The planet
-    number density per logarithmic planet period.  The density peaks
-    at $P = \ppeakrange \mathrm{yr}$ (90\% CL). \ilya{[Note: consider color map that doesn't have dark on both sides and light in the middle for B/W printing.]}}
+    \rpeakrange \REarth$ (90\% CL).  (Upper Right) The planet number
+    density in the period--radius plane.  The inferred correlation
+    coefficient between $\ln P$ and $\ln R$ is $r = \corrcoeffrange$.
+    (Lower Left) Scatter plot of the radius and period of the Kepler
+    planet candidates.  Color indicates the posterior false-positive
+    probability for each candidate.  Overall, the model prefers a
+    false-positive rate of $\fposrange$ (90\% CL).  The primary
+    contaminant is probably background eclipsing binaries; our
+    contamination rate is consistent with previous
+    work\cite{Fressin2013}. (Lower Right) The planet number density
+    per logarithmic planet period.  The density peaks at $P =
+    \ppeakrange \mathrm{yr}$ (90\% CL). }
 \end{figure}
 
 \begin{figure}
