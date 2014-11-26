@@ -8,18 +8,18 @@ import scipy.stats as ss
 import triangle as tri
 
 def setup():
-    fig_width_pt = 469.75502
+    fig_width_pt = 455.24408
     inches_per_pt = 1.0/72.27
 
     fig_size = [fig_width_pt*inches_per_pt,
                 fig_width_pt*inches_per_pt]
 
     params = { 'backend' : 'pdf',
-               'axes.labelsize' : 10,
-               'font.size' : 10,
-               'legend.fontsize' : 10,
-               'xtick.labelsize' : 8,
-               'ytick.labelsize' : 8,
+               'axes.labelsize' : 12,
+               'font.size' : 12,
+               'legend.fontsize' : 12,
+               'xtick.labelsize' : 10,
+               'ytick.labelsize' : 10,
                'text.usetex' : True,
                'figure.figsize' : fig_size,
                'figure.autolayout' : True,
@@ -463,6 +463,9 @@ def plot_parameters(logpost, chain, eta_earths, outdir=None):
 def paper_plots(logpost, chain, eta_earths, outdir):
     pp.figure()
     plot_parameters(logpost, chain, eta_earths, outdir=outdir)
+
+    pp.figure()
+    plot_selection_background(logpost, chain, outdir=outdir)
 
     pp.figure()
     plot_foreground_distributions(logpost, chain, outdir=outdir)
