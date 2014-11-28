@@ -1,9 +1,13 @@
+#!/usr/bin/env python
+import bz2
+import data_processing as dp
 import matplotlib.colors as mc
 import matplotlib.pyplot as pp
 import numpy as np
 import os.path as op
 import plotutils.autocorr as ac
 import plotutils.plotutils as pu
+import posterior as pos
 import scipy.stats as ss
 import triangle as tri
 
@@ -323,8 +327,8 @@ def plot_nplanets_histogram(chain, outdir=None):
         nps = chain[:,::tau,0].flatten()
 
     pu.plot_histogram_posterior(nps, normed=True, color='k', histtype='step')
-    pp.xlabel(r'$R_\mathrm{pl}$')
-    pp.ylabel(r'$p(R_\mathrm{pl})$')
+    pp.xlabel(r'$\Lambda_\mathrm{pl}$')
+    pp.ylabel(r'$p(\Lambda_\mathrm{pl})$')
 
     pp.axvline(np.percentile(nps, 5), color='k')
     pp.axvline(np.percentile(nps, 95), color='k')
@@ -451,8 +455,8 @@ def plot_parameters(logpost, chain, eta_earths, outdir=None):
     pp.subplot(2,1,2)
     nps = chain[:,:,0].flatten()
     pu.plot_histogram_posterior(nps, normed=True, color='k', histtype='step')
-    pp.xlabel(r'$R_\mathrm{pl}$')
-    pp.ylabel(r'$p(R_\mathrm{pl})$')
+    pp.xlabel(r'$\Lambda_\mathrm{pl}$')
+    pp.ylabel(r'$p(\Lambda_\mathrm{pl})$')
 
     pp.axvline(np.percentile(nps, 5), color='k')
     pp.axvline(np.percentile(nps, 95), color='k')
@@ -494,3 +498,17 @@ def paper_tex(logpost, chain, eta_earths, rs, outdir):
 
         out.write('\\newcommand{{\\ppeakrange}}{{{0:0.3f}_{{-{1:0.3f}}}^{{+{2:0.3f}}}}}\n'.format(pp[0], pp[1], pp[2]))
         
+def do_it_all(outdir):
+    with bz2.BZ2File('../../Kepler/chain.npy.bz2', 'r') as inp:
+        chain = np.load(inp)
+    tchain = ac.emcee_thinned_chain(chain)
+    candidates = dp.load_candidate_properties('../../Kepler/candidates.dat.bz2')
+    systems = dp.load_system_properties('../../Kepler/systems.dat.bz2')
+    logpost = pos.Posterior(candidates, systems)
+    eas = eta_earths(logpost, tchain)
+    setup()
+    paper_plots(logpost, tchain, eas, outdir)
+
+if __name__ == '__main__':
+    do_it_all('.')
+
