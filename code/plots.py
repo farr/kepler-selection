@@ -12,18 +12,18 @@ import scipy.stats as ss
 import triangle as tri
 
 def setup():
-    fig_width_pt = 455.24408
+    fig_width_pt = 245.26653
     inches_per_pt = 1.0/72.27
 
     fig_size = [fig_width_pt*inches_per_pt,
                 fig_width_pt*inches_per_pt]
 
     params = { 'backend' : 'pdf',
-               'axes.labelsize' : 12,
-               'font.size' : 12,
-               'legend.fontsize' : 12,
-               'xtick.labelsize' : 10,
-               'ytick.labelsize' : 10,
+               'axes.labelsize' : 8,
+               'font.size' : 8,
+               'legend.fontsize' : 8,
+               'xtick.labelsize' : 6,
+               'ytick.labelsize' : 6,
                'text.usetex' : True,
                'figure.figsize' : fig_size,
                'figure.autolayout' : True,
@@ -242,6 +242,8 @@ def plot_foreground_distributions(logpost, chain, N=1000, outdir=None):
     pp.xlabel(r'$P$ ($\mathrm{yr}$)')
     pp.ylabel(r'$dN/d\ln P$')
 
+    pp.tight_layout()
+    
     if outdir is not None:
         pp.savefig(op.join(outdir, 'foreground-dist.pdf'))
         
@@ -315,6 +317,8 @@ def plot_selection(logpost, chain, Ndraw=100, outdir=None):
     pp.xlabel(r'$P$ ($\mathrm{yr}$)')
     pp.ylabel(r'$p(\ln P)$')
 
+    pp.tight_layout()
+    
     if outdir is not None:
         pp.savefig(op.join(outdir, 'selection.pdf'))
     
@@ -438,6 +442,8 @@ def plot_selection_background(logpost, chain, outdir=None):
     pp.ylabel(r'$R$ ($R_\oplus$)')
 
     pp.axis(xmin=np.exp(ll[0]), ymin=np.exp(ll[1]), xmax=np.exp(ur[0]), ymax=np.exp(ur[1]))
+
+    pp.tight_layout()
     
     if outdir is not None:
         pp.savefig(op.join(outdir, 'bg.pdf'))
@@ -460,6 +466,8 @@ def plot_parameters(logpost, chain, eta_earths, outdir=None):
 
     pp.axvline(np.percentile(nps, 5), color='k')
     pp.axvline(np.percentile(nps, 95), color='k')
+
+    pp.tight_layout()
 
     if outdir is not None:
         pp.savefig(op.join(outdir, 'pars.pdf'))
@@ -511,4 +519,3 @@ def do_it_all(outdir):
 
 if __name__ == '__main__':
     do_it_all('.')
-
