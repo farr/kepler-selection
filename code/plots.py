@@ -492,7 +492,7 @@ def plot_selection_background(logpost, chain, outdir=None):
         pp.savefig(op.join(outdir, 'bg.pdf'))
 
         hdr = fits.Header()
-        hdr['COMMENT'] = 'Farr et al (2015) Figure 2'
+        hdr['COMMENT'] = 'Farr et al (2015) Figure 1'
         hdr['COMMENT'] = 'Posterior on the selection function and contamination'
         hdr['COMMENT'] = 'log_rho_min and log_rho_max (natural logs) are parameters giving'
         hdr['COMMENT'] = 'lower and upper bounds of the linear-in-log part of s.f.'
@@ -557,7 +557,7 @@ def plot_parameters(logpost, chain, eta_earths, outdir=None):
         tbhdu = fits.BinTableHDU.from_columns(cols)
 
         hdr = fits.Header()
-        hdr['COMMENT'] = 'Farr, et al (2015) Figure 1'
+        hdr['COMMENT'] = 'Farr, et al (2015) Figure 2'
         hdr['COMMENT'] = 'Posterior samples from eta_earth and Lambda_pl'
         hdr['COMMENT'] = 'eta_earth is the number density of planets per star'
         hdr['COMMENT'] = 'per natural-logarithmic interval in P and R'
