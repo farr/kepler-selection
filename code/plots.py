@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from astropy.io import fits
 import bz2
 import data_processing as dp
 import matplotlib.colors as mc
@@ -246,6 +247,27 @@ def plot_foreground_distributions(logpost, chain, N=1000, outdir=None):
     
     if outdir is not None:
         pp.savefig(op.join(outdir, 'foreground-dist.pdf'))
+
+        hdr = fits.Header()
+        hdr['COMMENT'] = 'Farr et al (2015) Figure 3'
+        hdr['COMMENT'] = 'Posterior mean on the true foreground number density'
+        hdr['COMMENT'] = 'and posterior false-alarm probability for all candidates'
+
+        hdu = fits.PrimaryHDU(header=hdr)
+        hdulist = fits.HDUList([hdu])
+
+        pers = fits.Column(name='P', format='E', unit='yr', array=PS.flatten())
+        rads = fits.Column(name='R', format='E', unit='REarth', array=RS.flatten())
+        dens = fits.Column(name='dNdlnPdlnR', format='E', array=dNdPdR.flatten())
+        hdulist.append(fits.BinTableHDU.from_columns(fits.ColDefs([pers, rads, dens])))
+
+        names = fits.Column(name='ID', format='D', array=logpost.candidates['Kepler_ID'])
+        pers = fits.Column(name='P', format='E', unit='yr', array=logpost.candidates['Period'])
+        rads = fits.Column(name='R', format='E', unit='REarth', array=logpost.candidates['Radius'])
+        faps = fits.Column(name='FAP', format='E', array=pbacks)
+        hdulist.append(fits.BinTableHDU.from_columns(fits.ColDefs([names, pers, rads, faps])))
+
+        hdulist.writeto(op.join(outdir, 'foreground-dist.fits'), clobber=True)
         
 def plot_selection(logpost, chain, Ndraw=100, outdir=None):
     fchain = chain.reshape((-1, chain.shape[2]))
@@ -321,7 +343,28 @@ def plot_selection(logpost, chain, Ndraw=100, outdir=None):
     
     if outdir is not None:
         pp.savefig(op.join(outdir, 'selection.pdf'))
-    
+
+        hdr = fits.Header()
+        hdr['COMMENT'] = 'Farr et al (2015) Figure 4'
+        hdr['COMMENT'] = 'Posterior predictive distribution of observed periods and radii'
+        hdr['COMMENT'] = 'from the model in that paper fit to the candidate data set.'
+        hdr['COMMENT'] = 'Also, the inferred selection function at each of the candidates.'
+
+        hdu = fits.PrimaryHDU(header=hdr)
+        hdulist = fits.HDUList([hdu])
+
+        pers = fits.Column(name='P', format='E', unit='yr', array=all_candidates['Period'])
+        rads = fits.Column(name='R', format='E', unit='REarth', array=all_candidates['Radius'])
+        hdulist.append(fits.BinTableHDU.from_columns(fits.ColDefs([pers, rads])))
+
+        ids = fits.Column(name='ID', format='D', array=logpost.candidates['Kepler_ID'])
+        pers = fits.Column(name='P', format='E', unit='yr', array=logpost.candidates['Period'])
+        rads = fits.Column(name='R', format='E', unit='REarth', array=logpost.candidates['Radius'])
+        pselect = fits.Column(name='psel', format='E', array=psel)
+        hdulist.append(fits.BinTableHDU.from_columns(fits.ColDefs([ids, pers, rads, pselect])))
+
+        hdulist.writeto(op.join(outdir, 'selection.fits'), clobber=True)
+
 def plot_nplanets_histogram(chain, outdir=None):
     tau = ac.autocorrelation_length_estimate(np.mean(chain[:,:,0], axis=0))
 
@@ -448,6 +491,41 @@ def plot_selection_background(logpost, chain, outdir=None):
     if outdir is not None:
         pp.savefig(op.join(outdir, 'bg.pdf'))
 
+        hdr = fits.Header()
+        hdr['COMMENT'] = 'Farr et al (2015) Figure 2'
+        hdr['COMMENT'] = 'Posterior on the selection function and contamination'
+        hdr['COMMENT'] = 'log_rho_min and log_rho_max (natural logs) are parameters giving'
+        hdr['COMMENT'] = 'lower and upper bounds of the linear-in-log part of s.f.'
+        hdr['COMMENT'] = 'We also provide the inferred 5%, median, and 95%'
+        hdr['COMMENT'] = 'on the s.f. from the posterior.'
+        hdr['COMMENT'] = 'The contamination is given as dNdlnRdlnP in the'
+        hdr['COMMENT'] = 'observed candidate set'
+
+        hdu = fits.PrimaryHDU(header=hdr)
+
+        hdulist = fits.HDUList([hdu])
+
+        lr_min = fits.Column(name='log_rho_min', format='E', array=pfchain['log_snr_min'].flatten())
+        lr_max = fits.Column(name='log_rho_max', format='E', array=pfchain['log_snr_max'].flatten())
+        lr_hdu = fits.BinTableHDU.from_columns(fits.ColDefs([lr_min, lr_max]))
+        hdulist.append(lr_hdu)
+
+        rhos = fits.Column(name='rho', format='E', array=rhos)
+        five = fits.Column(name='pselect_05', format='E', array=low)
+        median = fits.Column(name='pselect_50', format='E', array=med)
+        ninefive = fits.Column(name='pselect_95', format='E', array=high)
+        psel_hdu = fits.BinTableHDU.from_columns(fits.ColDefs([rhos, five, median, ninefive]))
+        hdulist.append(psel_hdu)
+
+        pers = fits.Column(name='P', format='E', unit='yr', array=np.exp(XS).flatten())
+        rads = fits.Column(name='R', format='E', unit='REarth', array=np.exp(YS).flatten())
+        dens = fits.Column(name='dNdlnPdlnR', format='E', array=ZS.flatten())
+        contam_hdu = fits.BinTableHDU.from_columns(fits.ColDefs([pers, rads, dens]))
+        hdulist.append(contam_hdu)
+
+        hdulist.writeto(op.join(outdir, 'pselect.fits'), clobber=True)
+        
+
 def plot_parameters(logpost, chain, eta_earths, outdir=None):
 
     pp.subplot(2,1,1)
@@ -471,6 +549,26 @@ def plot_parameters(logpost, chain, eta_earths, outdir=None):
 
     if outdir is not None:
         pp.savefig(op.join(outdir, 'pars.pdf'))
+
+        ea_col = fits.Column(name='eta_earth', format='E', array=eta_earths.flatten())
+        npl_col = fits.Column(name='Lambda_pl', format='E', array=nps)
+
+        cols = fits.ColDefs([ea_col, npl_col])
+        tbhdu = fits.BinTableHDU.from_columns(cols)
+
+        hdr = fits.Header()
+        hdr['COMMENT'] = 'Farr, et al (2015) Figure 1'
+        hdr['COMMENT'] = 'Posterior samples from eta_earth and Lambda_pl'
+        hdr['COMMENT'] = 'eta_earth is the number density of planets per star'
+        hdr['COMMENT'] = 'per natural-logarithmic interval in P and R'
+        hdr['COMMENT'] = 'at P = 1 yr and R = 1 REarth'
+        hdr['COMMENT'] = 'Lambda_pl is the Poisson mean number of planets'
+        hdr['COMMENT'] = 'per star'
+
+        prihdu = fits.PrimaryHDU(header=hdr)
+
+        hdus = fits.HDUList([prihdu, tbhdu])
+        hdus.writeto(op.join(outdir, 'pars.fits'), clobber=True)
 
 def paper_plots(logpost, chain, eta_earths, outdir):
     pp.figure()
