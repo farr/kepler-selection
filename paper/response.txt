@@ -1,0 +1,209 @@
+For the editor
+--------------
+
+As you will see from our response to the referee attached, we have
+identified a number of major errors in the referee's discussion of our
+work. Additionally, the referee seems unusually hostile to our
+modelling choices (e.g. "I could go on with many more effects that are
+not adequately modeled, and often not even discussed. But it's not a
+referee's job to develop a research plan for them.").  As you will see
+in the response, we feel that our choices are well-justified.
+
+Given these issues, could we request to have a second, independent
+referee comment on our revised work?  We don't know the procedures for
+this, but if appropriate we would be happy for both referees to see
+this note to the editor and the attached referee response.  
+
+We have made some changes to the discussion in the paper in response
+to the current referee's misunderstandings; those are outlined in the
+course of the response.
+
+Response
+--------
+
+There are several problems with the referee's main points of criticism
+of our paper, and also several outright mistakes. Nevertheless, in
+some cases we feel that the referee has valid criticisms of our paper.
+Below we explain the changes we have made to our manuscript to attempt
+to address the referee's criticism and where we feel that criticism is
+in error.
+
+The referee writes: 
+  
+  The entire analysis is predicated on assuming that the intrinsic
+  distribution for planets is described by a two-dimensional normal
+  distribution and that a piece-wise linear approximation to the
+  detection probability that depends only on the estimated transit
+  signal to noise. The authors argue that this is a reasonable model,
+  based primarily on high signal-to-noise detections of planets much
+  larger than Earth and at orbital periods much less than one year.
+  However, they they proceed to extrapolate to regions of planet
+  radius-orbital period space for which there are very few viable planet
+  candidates. Both of their headline results are based on such an
+  extrapolation.
+
+The referee is incorrect that our model validation is based on high
+signal-to-noise planets at large radii and short periods.  As is
+clearly shown in Figure 4 of our manuscript, synthetic data drawn from
+our fitted model matches the observations well at:
+
+ * Small planet radius irrespective of period (upper left panel)
+ * Peak of the fitted radius distribution (R = 1.25 REarth) (upper
+   left panel)
+ * Large radius, where the candidates are dominated by false-positives
+   (upper left panel)
+ * Small periods (lower right panel)
+ * Peak of the period distribution (lower right panel)
+ * Large period (lower right panel)
+
+It is simply incorrect to say that our model is only validated by
+comparison to candidates at much larger than Earth radius and shorter
+than one-year periods. The referee *is* correct that there are
+relatively few candidates in the P-R plane near 1 year and 1 REarth,
+but this is exactly why it is important to validate the model in a
+wide range of periods and radii that span the 1 year - 1 REarth region
+of interest. We admit to being surprised that such a simple model
+reproduced the data so well, but there it is.
+
+The referee writes:
+
+  Further, the manuscript assumes that the apparent size-period
+  distribution of false positives can be described by a single
+  two-dimensional normal distributions and suggest that this is
+  consistent with background eclipsing binary stars being the dominant
+  source of false positives among Kepler planet candidates. However,
+  previous works have demonstrated that both hierarchical triple stars
+  including an eclipsing binary and large planets orbiting the fainter
+  member of a binary star are both significant sources of false
+  positives. Further, both the rate of false positives and the relative
+  abundance of the types of false positives are functions of orbital
+  period and planet candidate size. This analysis completely ignores
+  these important issues.
+
+Of the four sentences in this paragraph, three contain major errors.
+First, our manuscript describes the size-period distribution of false
+positives by a linearly-varying function of size and period (c.f. Eq.
+(6)), not as a "single two-dimensional normal distribution
+[sic]"---perhaps this is a typo? Second, in the third sentence the
+referee seems to be complaining that we do not allow for size and
+period variations in the background distribution, but it is explicit
+in both the text and Figure 1(!) that the distribution of background
+contamination we use varies over the size-period plane. Third, in the
+final sentence the referee claims that we ignore these issues (related
+to contamination), but we do not; for example, we note in the
+Conclusion with respect to Petigura et al (2013) and Foreman-Mackey et
+al (2014) that "[in contrast to our work] Neither study attempted to
+account for contamination from falsely-identified candidate transit
+events, controlling this instead through careful choice of threshold."
+Similar statements appear throughout the paper. It is our view that
+incorporating contamination in the analysis is an important advance
+from our paper. In the remaining sentence of this paragraph, the
+referee notes that many types of contamination are present in the
+data, whose relative importance varies across the size-period plane;
+we agree, but note that our contamination model is purely empirical
+and agnostic to the source of contamination. While we claim that our
+fit is consistent with the amount of contamination from background
+eclipsing binaries determined from careful studies, nothing in our
+model is based on the detailed properties of this particular source of
+contamination.  We have added several sentences throughout the paper
+that emphasise this point.  Finally, we have become aware though
+helpful comments from Tim Morton that Morton & Johnson (2011) presents
+an early measurement of contamination in Kepler, and we now cite that
+paper in addition to Fressin et al. (2013) where appropriate.
+
+The referee writes:
+
+  The analysis is based entirely on a publicly available planet
+  candidate list, which is heterogeneous, but these issues are not
+  addressed. Further, they do not provide enough information about the
+  data set used to allow someone else to repeat their calculation.
+
+We state in the introduction that "The Q17 data release describes 2598
+“candidate” planetary transit signals identified by the Kepler team
+from observations of stars in the “EX” observing program (which are
+primarily G-type main-sequence stars similar to our own Sun (Batalha
+et al. 2010)), giving the inferred planetary period and radius for
+each." and, following Eq. (1) discussing our fiducial SNR, that "In
+our analysis, we obtain these quantities from the Kepler Input Catalog
+(Batalha et al. 2010; Brown et al. 2011) and the MAST Kepler
+archive[web link]." Additionally, we have released all our code for
+the analysis at https://github.com/ farr/kepler-selection (linked in
+the paper's conclusion). This includes the code that processes the
+data from the above-mentioned sources, code that performs the fitting,
+and code that produces the plots found in the paper. We are not sure
+what additional information the referee would require to repeat our
+calculation. We also note that, to our knowledge, no other estimate of
+eta-Earth has been performed using this data set (the result from
+Petigura et al. 2013 and the following Foreman-Mackey et al. 2014 used
+the same lightcurves from Kepler, but a customised pipeline). In some
+senses, this data set is heterogeneous (F, G, K stars), but in many
+important ways it is not: same instrument (Kepler), same pipeline,
+etc. We stand by our claim that this measurement refers to planets
+around Sun-like stars, though, unlike Petigura et al. 2013 and
+Foreman-Mackey et al. 2014, we did not restrict to G-type stars.
+
+The referee writes:
+
+  Additionally, they do not model the observational uncertainties in
+  the estimated planet radii and summarily dismiss a superior
+  statistical analysis which both accounts for this effect and
+  demonstrates the importance of this effect. The claim that their
+  result for eta_Earth is more precise than Foreman-Mackey et al. 2014
+  is at best misleading. It reflects a serious misunderstanding of the
+  main points from that paper. I am confident that this manuscript's
+  estimated uncertainty is smaller, because they ignore important
+  effects, extrapolate using a less flexible model, and make additional
+  unjustified assumptions.
+
+We do not attempt to model uncertainties in the estimates of period
+and radius; Foreman-Mackey et al 2014 do not attempt to account for
+contamination. Neither of these choices reflects a mis-understanding
+(in fact, Foreman-Mackey et al 2014 devote a paragraph of their
+discussion section to "False Positives," noting that their analysis
+does not account for them and proposing an extension of their work to
+examine their effect), but rather reflects the difficulty of
+constructing models that simultaneously reflect both effects. We have
+added several sentences to the conclusion section to make this point
+clearer. It is true that including period-radius uncertainty might
+increase the range of our constraints on eta-Earth and other
+parameters, but not by very much; note that we have tested our
+sensitivity to uncertainty, stating in Section 2 "In spite of several
+candidates with very large uncertainties in measured parameters, we
+have found that our fit is essentially unchanged when applied to
+synthetic observations with periods and radii re-drawn from the range
+of observational uncertainties quoted in the Q17 data release."  We
+re-iterate this point now in the conclusion.
+
+The referee writes:
+
+  I could go on with many more effects that are not adequately
+  modeled, and often not even discussed. But it's not a referee's job
+  to develop a research plan for them.
+
+  In summary, the manuscript presents one basic calculation for an
+  interesting, but complex problem which deserves a more detailed
+  analysis. I can understand journals accepting one or two early
+  analyses that are overly simplistic. But by now the field has plenty
+  of simplistic estimates. To make a significant contribution, the field
+  needs people to devote the time required to perform a more complete
+  analysis that pays attention to both astronomical and statistical
+  issues. Such a paper is almost certainly longer than appropriate for
+  ApJL. But there is certainly room for at least several more analyses
+  that build on each other to develop a progressively more complete
+  model to understand the frequency and distribution of small planets
+  around other stars.
+
+We disagree with the referee that our calculation is "basic" or
+"overly simplistic." If it were basic to incorporate contamination or
+empirically estimate selection effects then I am sure that previous
+papers would have incorporated elements of our analysis. Instead, we
+feel that our novel statistical methods for approaching this problem,
+applied to a previously-unexamined data set provide a useful
+independent estimate of the size-period distribution of exoplanets
+that confirms some aspects of previous analyses and calls others into
+question. It is true that our model of the distribution and selection
+functions is simple---but it fits the data extremely well. Should we
+complicate it in spite of this?  The referee seems unusually hostile
+to our modelling choices; given the large number of errors in the
+referee's statements about our paper, we would like to request a
+second referee's opinion on our paper.  

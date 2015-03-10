@@ -103,13 +103,15 @@ model we can simultaneously estimate $\etaearth$, place constraints on
 the planet period-radius distribution function, and determine the
 degree of contamination by false-positive candidate identifications.
 We find $\etaearth = \earange$ (90\% CL).  We conclude that each star
-hosts $\rplrange$ planets with $P \lesssim 3 \mathrm{yr}$ and $R
-\gtrsim 0.2 \REarth$, that the peak of the planet radius distribution
-lies at $\Rpeak = \rpeakrange \REarth$, and that $\ln P$ and $\ln R$
-are correlated with correlation coefficient $r = \corrcoeffrange$ (all
-90\% CL).  Our empirical model for false-positive contamination is
-consistent with the dominant source being background eclipsing binary
-stars \citep{Fressin2013}, with $\fposrange$ (90\% CL) of the
+hosts $\rplrange$ planets with $P \lesssim 3 \mathrm{yr}$ and
+$R \gtrsim 0.2 \REarth$, that the peak of the planet radius
+distribution lies at $\Rpeak = \rpeakrange \REarth$, and that $\ln P$
+and $\ln R$ are correlated with correlation coefficient
+$r = \corrcoeffrange$ (all 90\% CL).  Our empirical model for
+false-positive contamination does not depend on the detailed
+properties of the source of contamination, but is consistent with the
+dominant source being background eclipsing binary stars
+\citep{Morton2011,Fressin2013}, with $\fposrange$ (90\% CL) of the
 candidates being false-positives.  The distribution of planets we
 infer is consistent with a highly-stochastic planet formation process
 producing many correlated, fractional changes in planet sizes and
@@ -171,8 +173,8 @@ inferred detection probability appears in Fig.\ \ref{fig:det-bg}
   \includegraphics[width=\columnwidth]{bg}
   \caption{\label{fig:det-bg} \textbf{Inferred detection probability
       and density of background contamination.} (Top) The inferred
-    detection probability versus signal-to-noise ratio (see
-    Eq.\ \eqref{eq:pdetect}) from our parameterised model of selection
+    detection probability versus signal-to-noise ratio (see Eq.\
+    \eqref{eq:pdetect}) from our parameterised model of selection
     effects.  The solid line is the posterior median detection
     probability and the shading gives the 90\% credible posterior
     interval.  Our inferred detection probability is in rough
@@ -181,10 +183,12 @@ inferred detection probability appears in Fig.\ \ref{fig:det-bg}
     false-positive candidate signals, $d\Nbg/d\ln P \, d\ln R$ (see
     Eq.\ \eqref{eq:background-rate}).  The density is highest at small
     candidate period and large radius, consistent with the dominant
-    source of contamination being background eclipsing
-    binaries \citep{Fressin2013}.  Overall, our model finds
-    $\fposrange$ of the candidates are false-positive background
-    signals, consistent with the analysis in \citet{Fressin2013}.}
+    source of contamination being background eclipsing binaries
+    \citep{Morton2011,Fressin2013} (but note that our model does not
+    depend on the details of the sources contamination).  Overall, our
+    model finds $\fposrange$ of the candidates are false-positive
+    background signals, consistent with the analysis in
+    \citet{Morton2011,Fressin2013}.}
 \end{figure}
 
 The probability that a planet's orbital plane will align with the
@@ -236,20 +240,23 @@ gradient across a rectangular region in the $\ln P$-$\ln R$ plane:
     \ln R} \\ \times \left( 1 + \vec{\gamma} \cdot \left[ \ln P - \ln P_\mathrm{mid} , \ln
     R - \ln R_\mathrm{mid} \right] \right),
 \end{multline}
-where $\Delta \ln P = \ln P_\mathrm{max} - \ln P_\mathrm{min}$, $\ln
-P_\mathrm{mid} = 1/2\left(\ln P_\mathrm{max} - \ln P_\mathrm{min}
-\right)$, $\Delta \ln R = \ln R_\mathrm{max} - \ln R_\mathrm{min}$,
+where $\Delta \ln P = \ln P_\mathrm{max} - \ln P_\mathrm{min}$,
+$\ln P_\mathrm{mid} = 1/2\left(\ln P_\mathrm{max} - \ln P_\mathrm{min}
+\right)$,
+$\Delta \ln R = \ln R_\mathrm{max} - \ln R_\mathrm{min}$,
 $\ln R_\mathrm{mid} = 1/2\left(\ln R_\mathrm{max} - \ln R_\mathrm{min}
-\right)$.  $\Nbg$, the expected number of background false-positive
-events; $P_\mathrm{max}$, $P_\mathrm{min}$, $R_\mathrm{max}$, and
+\right)$.
+$\Nbg$, the expected number of background false-positive events;
+$P_\mathrm{max}$, $P_\mathrm{min}$, $R_\mathrm{max}$, and
 $R_\mathrm{min}$, the boundaries in the $P$-$R$ plane within which
 background events appear; and $\gamma$, the gradient in the number
 density of background events, are parameters of our model.  This is a
-purely empirical model for the background contamination, but is
-reasonable if the chief contaminant is background eclipsing binaries
-\citep{Fressin2013,Duquennoy1991}.  The posterior on the background
-number density in the $P$-$R$ plane appears in
-Figure\ \ref{fig:det-bg}.
+purely empirical model for the background contamination, not dependent
+on any properties of the source of contamination, but is reasonable if
+the chief contaminant is background eclipsing binaries
+\citep{Morton2011,Fressin2013,Duquennoy1991}.  The posterior on the
+background number density in the $P$-$R$ plane appears in Figure\
+\ref{fig:det-bg}.
 
 Unlike \citet{Foreman-Mackey2014}, we do not attempt to model the
 observational uncertainties in the estimated periods and radii from
@@ -318,12 +325,12 @@ planetary candidate is a planet instead of a background contaminant;
 these posteriors appear in Fig. \ref{fig:foreground-dist}.  Our model
 finds that the false-positive rate in the candidate data set is
 $\fposrange$ (90\% CL), consistent with previous work
-\citep{Fressin2013} estimating the contamination in the Kepler
-candidate set.  Our model has the peak of the planet period-radius
-distribution at $\Rpeak = \rpeakrange \REarth$, $P_\mathrm{peak} =
-\ppeakrange \mathrm{yr}$, and the distribution of planetary radii and
-periods is correlated, with correlation coefficient $r =
-\corrcoeffrange$ (all at 90\% CL).
+\citep{Morton2011,Fressin2013} estimating the contamination in the
+Kepler candidate set.  Our model has the peak of the planet
+period-radius distribution at $\Rpeak = \rpeakrange \REarth$,
+$P_\mathrm{peak} = \ppeakrange \mathrm{yr}$, and the distribution of
+planetary radii and periods is correlated, with correlation
+coefficient $r = \corrcoeffrange$ (all at 90\% CL).
 
 \begin{figure}
   \includegraphics[width=\columnwidth]{foreground-dist}
@@ -340,9 +347,9 @@ periods is correlated, with correlation coefficient $r =
     false-positive rate of $\fposrange$ (90\% CL).  The primary
     contaminant is probably background eclipsing binaries; our
     contamination rate is consistent with previous work
-    \citep{Fressin2013}. (Lower Right) The planet number density per
-    logarithmic planet period.  The density peaks at $P = \ppeakrange
-    \mathrm{yr}$ (90\% CL). }
+    \citep{Morton2011,Fressin2013}. (Lower Right) The planet number
+    density per logarithmic planet period.  The density peaks at $P =
+    \ppeakrange \mathrm{yr}$ (90\% CL). }
 \end{figure}
 
 Our model predicts a distribution for future observed data consistent
@@ -402,20 +409,35 @@ planet detection pipeline on a subset of the Kepler observations
 data sets of \citet{Petigura2013,Foreman-Mackey2014} are most
 comparable to ours.  These studies used the same data set, produced
 \citep{Petigura2013} from a subset of the available Kepler data and a
-customised pipeline to search for transit signals.  They both
-accounted for selection effects by measuring the recoverability of
-synthetic transit signals injected into their data, in contrast to our
-approach of empirically determining them from the observed data.
-Neither study attempted to account for contamination from
-falsely-identified candidate transit events, controlling this instead
-through careful choice of threshold.  Both studies used a more
-flexible model for the intrinsic distribution of planets than ours.
-Our result for $\etaearth$ is consistent with, but more precise than,
-\citet{Foreman-Mackey2014} and (somewhat) inconsistent with
-\citet{Petigura2013}.
+customised pipeline to search for transit signals.  The official
+Kepler pipeline used to produce the candidate list used in this work
+is an independent code that searches the same lightcurves for planets
+using different algorithms. Both \citet{Petigura2013} and
+\citet{Foreman-Mackey2014} accounted for selection effects by
+measuring the recoverability of synthetic transit signals injected
+into their data, in contrast to our approach of empirically
+determining them from the observed data.  Neither study attempted to
+account for contamination from falsely-identified candidate transit
+events as we do, controlling this instead through careful choice of
+threshold.  Both studies used a more flexible model for the intrinsic
+distribution of planets than ours, and \citet{Foreman-Mackey2014}
+accounted for the observational uncertainty in periods and radii
+explicitly in their model.  \citet{Foreman-Mackey2014} found that the
+discrepancy between their results and those of \citet{Petigura2013}
+was likely due to the un-modelled uncertainty in period and radius in
+the latter work.  Our result for $\etaearth$ is consistent with, but
+more precise than, \citet{Foreman-Mackey2014} and inconsistent with
+\citet{Petigura2013}.  We have checked that our results remain largely
+unchanged when re-analysing synthetic data sets that contain periods
+and radii drawn from the range of observational uncertainties quoted
+by the Kepler pipeline.  Combining the methods of
+\citet{Foreman-Mackey2014} for treating measurement uncertainty with
+the methods of this work for dealing with contamination is left for
+future work.
 
 \acknowledgements
 
+We thank Timothy D. Morton for helpful comments on this manuscript.
 The code implementing this analysis is available under an open-source
 ``MIT'' license at \url{https://github.com/farr/kepler-selection}.
 This work was supported by the Science and Technology Facilities
