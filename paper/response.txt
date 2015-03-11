@@ -2,17 +2,17 @@ For the editor
 --------------
 
 As you will see from our response to the referee attached, we have
-identified a number of major errors in the referee's discussion of our
-work. Additionally, the referee seems unusually hostile to our
-modelling choices (e.g. "I could go on with many more effects that are
-not adequately modeled, and often not even discussed. But it's not a
-referee's job to develop a research plan for them.").  As you will see
+identified a number of errors in the referee's discussion of our work.
+Additionally, the referee seems unusually hostile to our modelling
+choices (e.g. "I could go on with many more effects that are not
+adequately modeled, and often not even discussed. But it's not a
+referee's job to develop a research plan for them."). As you will see
 in the response, we feel that our choices are well-justified.
 
 Given these issues, could we request to have a second, independent
-referee comment on our revised work?  We don't know the procedures for
-this, but if appropriate we would be happy for both referees to see
-this note to the editor and the attached referee response.  
+referee comment on our revised work? If appropriate we would be happy
+for both referees to see this note to the editor and the attached
+referee response.
 
 We have made some changes to the discussion in the paper in response
 to the current referee's misunderstandings; those are outlined in the
@@ -21,12 +21,12 @@ course of the response.
 Response
 --------
 
-There are several problems with the referee's main points of criticism
-of our paper, and also several outright mistakes. Nevertheless, in
-some cases we feel that the referee has valid criticisms of our paper.
-Below we explain the changes we have made to our manuscript to attempt
-to address the referee's criticism and where we feel that criticism is
-in error.
+The referee has made several valid criticisms of our paper, which we
+address below. Nevertheless, we feel that there are some
+misunderstandings in the referee's main points of criticism. Below we
+explain the changes we have made to our manuscript to attempt to
+address the referee's criticism and where we feel that criticism is in
+error.
 
 The referee writes: 
   
@@ -80,36 +80,34 @@ The referee writes:
   period and planet candidate size. This analysis completely ignores
   these important issues.
 
-Of the four sentences in this paragraph, three contain major errors.
 First, our manuscript describes the size-period distribution of false
 positives by a linearly-varying function of size and period (c.f. Eq.
-(6)), not as a "single two-dimensional normal distribution
-[sic]"---perhaps this is a typo? Second, in the third sentence the
-referee seems to be complaining that we do not allow for size and
-period variations in the background distribution, but it is explicit
-in both the text and Figure 1(!) that the distribution of background
-contamination we use varies over the size-period plane. Third, in the
-final sentence the referee claims that we ignore these issues (related
-to contamination), but we do not; for example, we note in the
-Conclusion with respect to Petigura et al (2013) and Foreman-Mackey et
-al (2014) that "[in contrast to our work] Neither study attempted to
-account for contamination from falsely-identified candidate transit
-events, controlling this instead through careful choice of threshold."
-Similar statements appear throughout the paper. It is our view that
+(6)). Second, in the third sentence the referee seems to be
+complaining that we do not allow for size and period variations in the
+background distribution, but it is explicit in both the text and
+Figure 1 that the distribution of background contamination we use
+varies over the size-period plane. Third, in the final sentence the
+referee claims that we ignore these issues (related to contamination),
+but we do not; for example, we note in the Conclusion with respect to
+Petigura et al (2013) and Foreman-Mackey et al (2014) that "[in
+contrast to our work] Neither study attempted to account for
+contamination from falsely-identified candidate transit events,
+controlling this instead through careful choice of threshold." Similar
+statements appear throughout the paper. It is our view that
 incorporating contamination in the analysis is an important advance
-from our paper. In the remaining sentence of this paragraph, the
-referee notes that many types of contamination are present in the
-data, whose relative importance varies across the size-period plane;
-we agree, but note that our contamination model is purely empirical
-and agnostic to the source of contamination. While we claim that our
-fit is consistent with the amount of contamination from background
-eclipsing binaries determined from careful studies, nothing in our
-model is based on the detailed properties of this particular source of
-contamination.  We have added several sentences throughout the paper
-that emphasise this point.  Finally, we have become aware though
-helpful comments from Tim Morton that Morton & Johnson (2011) presents
-an early measurement of contamination in Kepler, and we now cite that
-paper in addition to Fressin et al. (2013) where appropriate.
+from our paper. The referee notes that many types of contamination are
+present in the data, whose relative importance varies across the
+size-period plane; we agree, but note that our contamination model is
+purely empirical and agnostic to the source of contamination. While we
+claim that our fit is consistent with the amount of contamination from
+background eclipsing binaries determined from careful studies, nothing
+in our model is based on the detailed properties of this particular
+source of contamination. We have added several sentences throughout
+the paper that emphasise this point. Finally, we have become aware
+though helpful comments from Tim Morton that Morton & Johnson (2011)
+presents an early measurement of contamination in Kepler, and we now
+cite that paper in addition to Fressin et al. (2013) where
+appropriate.
 
 The referee writes:
 
@@ -119,15 +117,15 @@ The referee writes:
   data set used to allow someone else to repeat their calculation.
 
 We state in the introduction that "The Q17 data release describes 2598
-“candidate” planetary transit signals identified by the Kepler team
-from observations of stars in the “EX” observing program (which are
+"candidate" planetary transit signals identified by the Kepler team
+from observations of stars in the "EX" observing program (which are
 primarily G-type main-sequence stars similar to our own Sun (Batalha
 et al. 2010)), giving the inferred planetary period and radius for
 each." and, following Eq. (1) discussing our fiducial SNR, that "In
 our analysis, we obtain these quantities from the Kepler Input Catalog
 (Batalha et al. 2010; Brown et al. 2011) and the MAST Kepler
 archive[web link]." Additionally, we have released all our code for
-the analysis at https://github.com/ farr/kepler-selection (linked in
+the analysis at https://github.com/farr/kepler-selection (linked in
 the paper's conclusion). This includes the code that processes the
 data from the above-mentioned sources, code that performs the fitting,
 and code that produces the plots found in the paper. We are not sure
@@ -135,12 +133,10 @@ what additional information the referee would require to repeat our
 calculation. We also note that, to our knowledge, no other estimate of
 eta-Earth has been performed using this data set (the result from
 Petigura et al. 2013 and the following Foreman-Mackey et al. 2014 used
-the same lightcurves from Kepler, but a customised pipeline). In some
-senses, this data set is heterogeneous (F, G, K stars), but in many
-important ways it is not: same instrument (Kepler), same pipeline,
-etc. We stand by our claim that this measurement refers to planets
-around Sun-like stars, though, unlike Petigura et al. 2013 and
-Foreman-Mackey et al. 2014, we did not restrict to G-type stars.
+the some of the same lightcurves from Kepler, but a customised
+pipeline). In some senses, this data set is heterogeneous (F, G, K
+stars), but in many important ways it is not: same instrument
+(Kepler), same pipeline, etc. 
 
 The referee writes:
 
@@ -194,16 +190,13 @@ The referee writes:
   around other stars.
 
 We disagree with the referee that our calculation is "basic" or
-"overly simplistic." If it were basic to incorporate contamination or
-empirically estimate selection effects then I am sure that previous
-papers would have incorporated elements of our analysis. Instead, we
-feel that our novel statistical methods for approaching this problem,
-applied to a previously-unexamined data set provide a useful
-independent estimate of the size-period distribution of exoplanets
-that confirms some aspects of previous analyses and calls others into
-question. It is true that our model of the distribution and selection
-functions is simple---but it fits the data extremely well. Should we
-complicate it in spite of this?  The referee seems unusually hostile
-to our modelling choices; given the large number of errors in the
-referee's statements about our paper, we would like to request a
-second referee's opinion on our paper.  
+"overly simplistic." Our approach to incorporating contamination and
+emprically estimating selection effects is based on novel statistical
+methods and represents a step forward relative to previous analyses.
+The application of these methods to a previously-unexamined data set
+provides a useful independent estimate of the size-period distribution
+of exoplanets that confirms some aspects of previous analyses and
+calls others into question. The fact that our simple model of the
+distribution and selection functions fits the data extremely well
+indicates that, at present, the data quality and quantity are not
+sufficient to warrant more complicated modeling. 
