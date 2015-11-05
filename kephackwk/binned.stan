@@ -203,13 +203,11 @@ parameters {
 transformed parameters {
   real dndlnpdlnr[nps, nrs]; /* Rate density ~ exp(mu + L*rawrate) for
 				cov = L*L^T (GP prior). */
-  matrix[nps*nrs, nps*nrs] cov; 
-
   {
     vector[nps*nrs] y;
     vector[nps*nrs] z; 
     matrix[nps*nrs, nps*nrs] L;
-    matrix[nps*nrs, nps*nrs] M;
+    matrix[nps*nrs, nps*nrs] cov; 
 
     y <- to_vector(to_array_1d(rawrate));
     cov <- gp_cov(log_binpts, metric, sigma, wn_frac, nps*nrs);
